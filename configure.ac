@@ -10,8 +10,12 @@ AM_MAINTAINER_MODE
 
 AC_PROG_CXX
 
-
-
+AC_ARG_WITH([hpdf-lib-path],
+  [AS_HELP_STRING([--with-hpdf-lib-path], [location of the hpdf library])],
+  [HPDF_LIBS="-L$withval -lhpdf"],
+  [HPDF_LIBS='-lhpdf'])
+AC_SUBST([HPDF_LIBS])
+AC_CHECK_LIB([hpdf], [HPDF_NewDoc], [], [AC_MSG_ERROR(Can't find libhpdf)])
 
 dnl ***************************************************************************
 dnl Internatinalization
