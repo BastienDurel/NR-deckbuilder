@@ -4,7 +4,7 @@
   <!-- interface-naming-policy project-wide -->
   <object class="GtkWindow" id="main_window">
     <property name="visible">True</property>
-    <property name="title" translatable="yes">Hello World!</property>
+    <property name="title" translatable="yes">Netrunner Deck builder</property>
     <property name="default_width">500</property>
     <property name="default_height">400</property>
     <child>
