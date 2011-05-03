@@ -25,32 +25,76 @@
 #  include <libintl.h>
 #endif
 
+#include "nr-card.h"
 
 /* For testing propose use the local (not installed) ui file */
 /* #define UI_FILE PACKAGE_DATA_DIR"/nr_deckbuilder/ui/nr_deckbuilder.ui" */
 #define UI_FILE "src/nr_deckbuilder.ui"
-   
+
+class NrDeckbuilder
+{
+	Gtk::Main& kit;
+	
+	Glib::RefPtr<Gtk::Builder> builder;
+	Gtk::Window* main_win;
+	Gtk::Image* img;
+	
+	public:
+		NrDeckbuilder(Gtk::Main&);
+		void Run();
+
+	protected:
+		void LoadImage(NrCard * card);
+};
+
 int
 main (int argc, char *argv[])
 {
 	Gtk::Main kit(argc, argv);
 	
-	//Load the Glade file and instiate its widgets:
-	Glib::RefPtr<Gtk::Builder> builder;
+	//Load the Glade file and instiate its widgets:	
 	try
 	{
-		builder = Gtk::Builder::create_from_file(UI_FILE);
+		NrDeckbuilder NR(kit);
+		NR.Run();
 	}
 	catch (const Glib::FileError & ex)
 	{
 		std::cerr << ex.what() << std::endl;
 		return 1;
 	}
-	Gtk::Window* main_win = 0;
+	
+	return 0;
+}
+
+NrDeckbuilder::NrDeckbuilder(Gtk::Main& a) : kit(a)
+{
+	//Load the Glade file and instiate its widgets:	
+	builder = Gtk::Builder::create_from_file(UI_FILE);
+	main_win = 0;
 	builder->get_widget("main_window", main_win);
+	img = 0;
+	builder->get_widget("image", img);
+}
+
+void NrDeckbuilder::Run()
+{
+	NrCard* s = NrCard::Sample();
+	
 	if (main_win)
-	{
+	{	
+		Gtk::Button* button = 0;
+		builder->get_widget("button", button);
+		button->signal_clicked().connect (sigc::bind(sigc::mem_fun(*this, &NrDeckbuilder::LoadImage), s));
+		
 		kit.run(*main_win);
 	}
-	return 0;
+}
+
+void NrDeckbuilder::LoadImage(NrCard * card)
+{
+	if (img && card) 
+		img->set(card->GetImage());
+	else if (img && !card)
+		img->set(Gtk::Stock::MISSING_IMAGE, Gtk::ICON_SIZE_LARGE_TOOLBAR);
 }

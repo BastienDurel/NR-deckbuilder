@@ -20,3 +20,6 @@ INSTALL
 .anjuta
 Debug
 autom4te.cache
+*.in.in
+*~
+Makefile

@@ -18,7 +18,12 @@ AM_CFLAGS =\
 bin_PROGRAMS = nr_deckbuilder
 
 nr_deckbuilder_SOURCES = \
-	main.cc sqlite3.c
+	main.cc \
+	sqlite3.c       \
+	nr-db.h       \
+	nr-db.cc       \
+	nr-card.cc       \
+	nr-card.h
 
 nr_deckbuilder_LDFLAGS = 
 
