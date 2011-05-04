@@ -25,11 +25,30 @@
 #  include <libintl.h>
 #endif
 
+#include "nr-db.h"
 #include "nr-card.h"
 
 /* For testing propose use the local (not installed) ui file */
 /* #define UI_FILE PACKAGE_DATA_DIR"/nr_deckbuilder/ui/nr_deckbuilder.ui" */
 #define UI_FILE "src/nr_deckbuilder.ui"
+
+class CardListColumns : public Gtk::TreeModelColumnRecord
+{
+public:
+
+	CardListColumns()
+	{
+		add(m_col_name);
+		add(m_col_cost);
+		add(m_col_keywords);
+		add(m_col_text);
+	}
+
+	Gtk::TreeModelColumn<Glib::ustring> m_col_name;
+	Gtk::TreeModelColumn<int> m_col_cost;
+	Gtk::TreeModelColumn<Glib::ustring> m_col_keywords;
+	Gtk::TreeModelColumn<Glib::ustring> m_col_text;
+};
 
 class NrDeckbuilder
 {
@@ -38,6 +57,11 @@ class NrDeckbuilder
 	Glib::RefPtr<Gtk::Builder> builder;
 	Gtk::Window* main_win;
 	Gtk::Image* img;
+
+	NrDb* db;
+
+	CardListColumns MasterColumns;
+	CardListColumns DeckColumns;
 	
 	public:
 		NrDeckbuilder(Gtk::Main&);
@@ -75,20 +99,32 @@ NrDeckbuilder::NrDeckbuilder(Gtk::Main& a) : kit(a)
 	builder->get_widget("main_window", main_win);
 	img = 0;
 	builder->get_widget("image", img);
+
+	db = NrDb::Master();
+
+	Glib::RefPtr<Glib::Object> rMaster = builder->get_object("mainliststore");
+	//Glib::Object* pMaster = rMaster;
+	//Gtk::ListStore* master = rMaster;
+	//builder->get_widget("mainliststore", master);
+	//master->set(MasterColumns);
+	Glib::RefPtr<Gtk::ListStore> master = Glib::RefPtr<Gtk::ListStore>::cast_dynamic(rMaster);
+	master->append();
 }
 
 void NrDeckbuilder::Run()
 {
-	NrCard* s = NrCard::Sample();
+	//NrCard* s = NrCard::Sample();
 	
 	if (main_win)
 	{	
+		/*
 		Gtk::Button* button = 0;
 		builder->get_widget("button", button);
 		button->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &NrDeckbuilder::LoadImage), s));
 
 		builder->get_widget("unloadbtn", button);
 		button->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &NrDeckbuilder::LoadImage), (NrCard*)0));
+		*/
 		
 		kit.run(*main_win);
 	}
@@ -96,8 +132,11 @@ void NrDeckbuilder::Run()
 
 void NrDeckbuilder::LoadImage(NrCard * card)
 {
-	if (img && card) 
-		img->set(card->GetImage());
-	else if (img && !card)
-		img->set(Gtk::Stock::MISSING_IMAGE, Gtk::ICON_SIZE_LARGE_TOOLBAR);
+	if (img)
+	{
+		if (card && card->GetImage())
+			img->set(card->GetImage());
+		else 
+			img->set(Gtk::Stock::MISSING_IMAGE, Gtk::ICON_SIZE_LARGE_TOOLBAR);
+	}
 }

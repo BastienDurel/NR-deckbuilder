@@ -24,6 +24,10 @@
 #include <unistd.h>
 #include <iostream>
 
+NrCard::NrCard() : base64Buffer(0)
+{
+}
+
 NrCard::NrCard(const NrCard& a) : base64Buffer(0)
 {
 	name = a.name;

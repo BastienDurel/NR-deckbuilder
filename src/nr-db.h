@@ -21,6 +21,7 @@
 #define _NR_DB_H_
 
 #include "sqlite3.h"
+#include <glibmm/ustring.h>
 
 class NrDb
 {
@@ -30,8 +31,21 @@ public:
 
 	bool Import(const char* aFile);
 
+	bool List();
+	void EndList();
+	int ListCount() const { return listCount; }
+	class NrCard* Next();
+
+	const char * LastError() { if (db) return sqlite3_errmsg(db); return "no DB"; }
+
+	bool LoadImage(class NrCard*);
+
 protected:
 	sqlite3* db;
+
+	Glib::ustring listSql;
+	sqlite3_stmt* listStmt;
+	int listCount;
 
 private:
 	NrDb(const char* aFile);
