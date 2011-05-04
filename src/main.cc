@@ -85,7 +85,10 @@ void NrDeckbuilder::Run()
 	{	
 		Gtk::Button* button = 0;
 		builder->get_widget("button", button);
-		button->signal_clicked().connect (sigc::bind(sigc::mem_fun(*this, &NrDeckbuilder::LoadImage), s));
+		button->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &NrDeckbuilder::LoadImage), s));
+
+		builder->get_widget("unloadbtn", button);
+		button->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &NrDeckbuilder::LoadImage), (NrCard*)0));
 		
 		kit.run(*main_win);
 	}
