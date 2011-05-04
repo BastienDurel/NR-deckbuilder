@@ -18,5 +18,42 @@
  */
 
 #include "nr-db.h"
+#include <stdexcept>
+#include <iostream>
 
+NrDb::NrDb(const char* aFile) : db(0)
+{
+	if (sqlite3_open(aFile, &db) != SQLITE_OK)
+	{
+		if (db) {
+			std::cerr << "Error opening sqlite file: " << sqlite3_errmsg(db) << std::endl;
+			throw std::runtime_error(sqlite3_errmsg(db));
+		}
+		else {
+			std::cerr << "Error opening sqlite file: not enough memory" << std::endl;
+			throw std::bad_alloc();
+		}
+	}
+}
+
+NrDb::~NrDb()
+{
+	if (db)
+		sqlite3_close(db);
+}
+
+NrDb* NrDb::Master()
+{
+	return new NrDb("sample/test.db");
+}
+
+bool NrDb::Import(const char* aFile)
+{
+	int err;
+	char* errmsg = 0;
+	int (*callback)(void*,int,char**,char**) = 0;
+	void* callback_param = 0;
+	err = sqlite3_exec(db, "ATTACH DATABASE aFile AS imp", callback, callback_param, &errmsg);
+	return false;
+}
 

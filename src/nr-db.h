@@ -20,12 +20,18 @@
 #ifndef _NR_DB_H_
 #define _NR_DB_H_
 
+#include "sqlite3.h"
+
 class NrDb
 {
 public:
 	static NrDb* Master();
+	~NrDb();
+
+	bool Import(const char* aFile);
 
 protected:
+	sqlite3* db;
 
 private:
 	NrDb(const char* aFile);
