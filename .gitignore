@@ -23,3 +23,8 @@ autom4te.cache
 *.in.in
 *~
 Makefile
+config.h
+config.log
+config.status
+libtool
+stamp-*

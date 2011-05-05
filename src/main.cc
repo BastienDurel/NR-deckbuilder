@@ -1,4 +1,4 @@
-/* -*- Mode: C; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*- */
+/* -*- Mode: C++; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*- */
 /*
  * main.cc
  * Copyright (C) Bastien Durel 2011 <bastien@durel.org>
@@ -45,9 +45,20 @@ public:
 	}
 
 	Gtk::TreeModelColumn<Glib::ustring> m_col_name;
-	Gtk::TreeModelColumn<int> m_col_cost;
+	Gtk::TreeModelColumn<guint> m_col_cost;
 	Gtk::TreeModelColumn<Glib::ustring> m_col_keywords;
 	Gtk::TreeModelColumn<Glib::ustring> m_col_text;
+};
+
+class DeckListColumns : public CardListColumns
+{
+public:
+  DeckListColumns()
+  {
+		add(m_col_count);
+  }
+
+	Gtk::TreeModelColumn<guint> m_col_count;
 };
 
 class NrDeckbuilder
@@ -61,7 +72,7 @@ class NrDeckbuilder
 	NrDb* db;
 
 	CardListColumns MasterColumns;
-	CardListColumns DeckColumns;
+	DeckListColumns DeckColumns;
 	
 	public:
 		NrDeckbuilder(Gtk::Main&);
@@ -102,13 +113,13 @@ NrDeckbuilder::NrDeckbuilder(Gtk::Main& a) : kit(a)
 
 	db = NrDb::Master();
 
-	Glib::RefPtr<Glib::Object> rMaster = builder->get_object("mainliststore");
+	//Glib::RefPtr<Glib::Object> rMaster = builder->get_object("mainliststore");
 	//Glib::Object* pMaster = rMaster;
 	//Gtk::ListStore* master = rMaster;
 	//builder->get_widget("mainliststore", master);
 	//master->set(MasterColumns);
-	Glib::RefPtr<Gtk::ListStore> master = Glib::RefPtr<Gtk::ListStore>::cast_dynamic(rMaster);
-	master->append();
+	//Glib::RefPtr<Gtk::ListStore> master = Glib::RefPtr<Gtk::ListStore>::cast_dynamic(rMaster);
+	//master->append();
 }
 
 void NrDeckbuilder::Run()
@@ -125,7 +136,24 @@ void NrDeckbuilder::Run()
 		builder->get_widget("unloadbtn", button);
 		button->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &NrDeckbuilder::LoadImage), (NrCard*)0));
 		*/
-		
+
+    
+		Gtk::TreeView* master = 0;
+    builder->get_widget("mastertreeview", master);
+    if (master)
+    {
+      Glib::RefPtr<Gtk::ListStore> refListStore =
+        Gtk::ListStore::create(MasterColumns);
+      Gtk::TreeModel::iterator iter;
+      for (int i = 0; i < 100; ++i) {
+        iter = refListStore->append();
+        Gtk::TreeModel::Row row = *iter;
+        row[MasterColumns.m_col_name] = "test";
+      }
+      master->set_model(refListStore);
+      master->append_column("Name", MasterColumns.m_col_name);
+    }
+
 		kit.run(*main_win);
 	}
 }
