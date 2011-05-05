@@ -28,3 +28,5 @@ config.log
 config.status
 libtool
 stamp-*
+*.o
+src/nr_deckbuilder
