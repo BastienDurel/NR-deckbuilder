@@ -23,7 +23,8 @@ nr_deckbuilder_SOURCES = \
 	nr-db.h       \
 	nr-db.cc       \
 	nr-card.cc       \
-	nr-card.h
+	nr-card.h       \
+	main.h
 
 nr_deckbuilder_LDFLAGS = 
 

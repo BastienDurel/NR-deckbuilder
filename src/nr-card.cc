@@ -24,7 +24,7 @@
 #include <unistd.h>
 #include <iostream>
 
-NrCard::NrCard() : base64Buffer(0)
+NrCard::NrCard() : base64Buffer(0), points(-1), cost(0)
 {
 }
 
@@ -84,3 +84,14 @@ gchar* NrCard::Base64Image()
 	return base64Buffer;
 }
 
+Glib::ustring NrCard::GetRaretyStr(bool aShort) const
+{
+	switch (rarety)
+	{
+		case rare: return aShort ? "R" : "Rare";
+		case uncommon: return aShort ? "U" : "Uncommon";
+		case common: return aShort ? "C" : "Common";
+		case vitale: return aShort ? "V" : "Vitale";
+	}
+	return "?";
+}

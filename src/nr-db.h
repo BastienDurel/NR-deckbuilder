@@ -22,6 +22,7 @@
 
 #include "sqlite3.h"
 #include <glibmm/ustring.h>
+#include "nr-card.h"
 
 class NrDb
 {
@@ -32,13 +33,21 @@ public:
 	bool Import(const char* aFile);
 
 	bool List();
+	bool List(const Glib::ustring& aFilter);
 	void EndList();
 	int ListCount() const { return listCount; }
-	class NrCard* Next();
+	NrCard* Next();
 
 	const char * LastError() { if (db) return sqlite3_errmsg(db); return "no DB"; }
 
 	bool LoadImage(class NrCard*);
+
+	NrCardList& GetFullList() { return fullList; }
+	NrCardList::iterator FullBegin() { return fullList.begin(); }
+	NrCardList::const_iterator FullBegin() const { return fullList.begin(); }
+	NrCardList::iterator FullEnd() { return fullList.end(); }
+	NrCardList::const_iterator FullEnd() const { return fullList.end(); }
+	NrCardList GetList(const Glib::ustring& aFilter);
 
 protected:
 	sqlite3* db;
@@ -47,6 +56,8 @@ protected:
 	sqlite3_stmt* listStmt;
 	int listCount;
 
+	NrCardList fullList;
+	
 private:
 	NrDb(const char* aFile);
 

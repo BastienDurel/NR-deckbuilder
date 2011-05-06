@@ -25,6 +25,8 @@
 #  include <libintl.h>
 #endif
 
+#include <memory>
+
 #include "nr-db.h"
 #include "nr-card.h"
 
@@ -32,55 +34,7 @@
 /* #define UI_FILE PACKAGE_DATA_DIR"/nr_deckbuilder/ui/nr_deckbuilder.ui" */
 #define UI_FILE "src/nr_deckbuilder.ui"
 
-class CardListColumns : public Gtk::TreeModelColumnRecord
-{
-public:
-
-	CardListColumns()
-	{
-		add(m_col_name);
-		add(m_col_cost);
-		add(m_col_keywords);
-		add(m_col_text);
-	}
-
-	Gtk::TreeModelColumn<Glib::ustring> m_col_name;
-	Gtk::TreeModelColumn<guint> m_col_cost;
-	Gtk::TreeModelColumn<Glib::ustring> m_col_keywords;
-	Gtk::TreeModelColumn<Glib::ustring> m_col_text;
-};
-
-class DeckListColumns : public CardListColumns
-{
-public:
-  DeckListColumns()
-  {
-		add(m_col_count);
-  }
-
-	Gtk::TreeModelColumn<guint> m_col_count;
-};
-
-class NrDeckbuilder
-{
-	Gtk::Main& kit;
-	
-	Glib::RefPtr<Gtk::Builder> builder;
-	Gtk::Window* main_win;
-	Gtk::Image* img;
-
-	NrDb* db;
-
-	CardListColumns MasterColumns;
-	DeckListColumns DeckColumns;
-	
-	public:
-		NrDeckbuilder(Gtk::Main&);
-		void Run();
-
-	protected:
-		void LoadImage(NrCard * card);
-};
+#include "main.h"
 
 int
 main (int argc, char *argv[])
@@ -93,9 +47,11 @@ main (int argc, char *argv[])
 		NrDeckbuilder NR(kit);
 		NR.Run();
 	}
-	catch (const Glib::FileError & ex)
+	catch (const Glib::Exception & ex)
 	{
 		std::cerr << ex.what() << std::endl;
+		Gtk::MessageDialog msg(ex.what(), false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK, true);
+		msg.run();
 		return 1;
 	}
 	
@@ -112,14 +68,10 @@ NrDeckbuilder::NrDeckbuilder(Gtk::Main& a) : kit(a)
 	builder->get_widget("image", img);
 
 	db = NrDb::Master();
-
-	//Glib::RefPtr<Glib::Object> rMaster = builder->get_object("mainliststore");
-	//Glib::Object* pMaster = rMaster;
-	//Gtk::ListStore* master = rMaster;
-	//builder->get_widget("mainliststore", master);
-	//master->set(MasterColumns);
-	//Glib::RefPtr<Gtk::ListStore> master = Glib::RefPtr<Gtk::ListStore>::cast_dynamic(rMaster);
-	//master->append();
+	if (!db)
+	{
+		throw Glib::FileError(Glib::FileError::FAILED, "Cannot load Master DB");
+	}
 }
 
 void NrDeckbuilder::Run()
@@ -136,24 +88,7 @@ void NrDeckbuilder::Run()
 		builder->get_widget("unloadbtn", button);
 		button->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &NrDeckbuilder::LoadImage), (NrCard*)0));
 		*/
-
-    
-		Gtk::TreeView* master = 0;
-    builder->get_widget("mastertreeview", master);
-    if (master)
-    {
-      Glib::RefPtr<Gtk::ListStore> refListStore =
-        Gtk::ListStore::create(MasterColumns);
-      Gtk::TreeModel::iterator iter;
-      for (int i = 0; i < 100; ++i) {
-        iter = refListStore->append();
-        Gtk::TreeModel::Row row = *iter;
-        row[MasterColumns.m_col_name] = "test";
-      }
-      master->set_model(refListStore);
-      master->append_column("Name", MasterColumns.m_col_name);
-    }
-
+		LoadMaster();
 		kit.run(*main_win);
 	}
 }
@@ -167,4 +102,44 @@ void NrDeckbuilder::LoadImage(NrCard * card)
 		else 
 			img->set(Gtk::Stock::MISSING_IMAGE, Gtk::ICON_SIZE_LARGE_TOOLBAR);
 	}
+}
+
+void NrDeckbuilder::LoadMaster()
+{
+	LoadList(db->FullBegin(), db->FullEnd());
+}
+
+void NrDeckbuilder::LoadList(NrCardList::const_iterator lbegin, NrCardList::const_iterator lend)
+{
+	Gtk::TreeView* master = 0;
+    builder->get_widget("mastertreeview", master);
+    if (master)
+	{
+		Glib::RefPtr<Gtk::ListStore> refListStore =
+			Gtk::ListStore::create(MasterColumns);
+  		Gtk::TreeModel::iterator iter;
+  		for (NrCardList::const_iterator citer = lbegin; citer != lend; ++citer) {
+    		iter = refListStore->append();
+    		Gtk::TreeModel::Row row = *iter;
+			
+    		row[MasterColumns.m_col_name] = citer->GetName();
+    		row[MasterColumns.m_col_text] = citer->GetText();
+    		row[MasterColumns.m_col_keywords] = citer->GetKeywords();
+    		row[MasterColumns.m_col_cost] = citer->GetCost();
+			if (citer->GetPoints() > -1) {
+				char tmp[12]; sprintf(tmp, "%d", citer->GetPoints());
+				row[MasterColumns.m_col_points] = tmp;
+			} else {
+				row[MasterColumns.m_col_points] = "";
+			}
+  		}
+  		master->set_model(refListStore);
+  		master->append_column("Name", MasterColumns.m_col_name);
+  		master->append_column("Type", MasterColumns.m_col_type);
+  		master->append_column("Keyw", MasterColumns.m_col_type);
+  		master->append_column("Cost", MasterColumns.m_col_cost);
+  		master->append_column("Pt", MasterColumns.m_col_points);
+  		master->append_column("Text", MasterColumns.m_col_text);
+    }
+
 }

@@ -21,6 +21,7 @@
 #define _NR_CARD_H_
 
 #include <set>
+#include <vector>
 #include <glibmm/ustring.h>
 #include <glibmm/refptr.h>
 #include <gdkmm/pixbuf.h>
@@ -30,6 +31,10 @@ class NrCard
 	friend class NrDb;
 	
 public:
+
+	typedef enum { rare, uncommon, common, vitale } Rarety;
+	typedef enum { agenda, ice, node, upgrade, operation, program, prep, ressource, hardware, other } Type;
+	
 	const Glib::ustring& GetName() const { return name; }
 	const Glib::ustring& GetKeywords() const { return keywords; }
 	//const std::set<Glib::ustring>& GetKeywords() const { return keywords; }
@@ -37,13 +42,18 @@ public:
 	const Glib::ustring& GetRulingText() const { return rulingText; }
 	const Glib::ustring& GetFlavorText() const { return flavorText; }
 	const Glib::RefPtr<Gdk::Pixbuf> GetImage() const { return image; }
-
+	Rarety GetRarety() const { return rarety; }
+	Glib::ustring GetRaretyStr(bool aShort=false) const;
+	Type GetType() const { return type; }
+	guint GetCost() const { return cost; }
+	gint GetPoints() const { return points; }
+	
 	static NrCard* Sample();
 	NrCard(const NrCard&);
 	~NrCard();
 
 	gchar* Base64Image();
-
+	
 protected:
 	Glib::ustring name;
 	Glib::ustring keywords;
@@ -52,6 +62,10 @@ protected:
 	Glib::ustring rulingText;
 	Glib::ustring flavorText;
 	Glib::RefPtr<Gdk::Pixbuf> image;
+	Rarety rarety;
+	Type type;
+	guint cost;
+	gint points; // means agenda points, ice strenght. -1 for no points.
 	
 private:
 	gchar* base64Buffer;
@@ -59,5 +73,7 @@ private:
 	NrCard();
 
 };
+
+typedef std::vector<NrCard> NrCardList;
 
 #endif // _NR_CARD_H_

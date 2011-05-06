@@ -27,13 +27,16 @@ NrDb::NrDb(const char* aFile) : db(0), listStmt(0)
 {
 	if (sqlite3_open_v2(aFile, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, 0) != SQLITE_OK)
 	{
+		Glib::ustring errstring = "Error opening sqlite file: ";
 		if (db) {
-			std::cerr << "Error opening sqlite file: " << sqlite3_errmsg(db) << std::endl;
-			throw std::runtime_error(sqlite3_errmsg(db));
+			errstring += sqlite3_errmsg(db);
+			std::cerr << errstring << std::endl;
+			throw Glib::FileError(Glib::FileError::FAILED, errstring);
 		}
 		else {
-			std::cerr << "Error opening sqlite file: not enough memory" << std::endl;
-			throw std::bad_alloc();
+			errstring += "not enough memory";
+			std::cerr << errstring << std::endl;
+			throw Glib::FileError(Glib::FileError::FAILED, errstring);
 		}
 	}
 }
@@ -46,7 +49,20 @@ NrDb::~NrDb()
 
 NrDb* NrDb::Master()
 {
-	return new NrDb("sample/test.db");
+	NrDb* masterDb = new NrDb("sample/test.db");
+	if (!masterDb->List())
+	{
+		delete masterDb;
+		throw Glib::FileError(Glib::FileError::FAILED, "Cannot list master DB");
+	}
+	NrCard* card;
+	while ((card = masterDb->Next()) != 0)
+	{
+		masterDb->fullList.push_back(*card);
+		delete card;
+	}
+	masterDb->EndList();
+	return masterDb;
 }
 
 bool NrDb::Import(const char* aFile)
@@ -75,6 +91,30 @@ void NrDb::EndList()
 
 bool NrDb::List()
 {
+	if (!db) 
+	{
+		std::cerr << "No DB handle" << std::endl;
+		return false;
+	}
+
+	if (listStmt)
+	{ /* Clean previous */
+		EndList();
+	}
+
+	/* start query */
+	listSql = SELECT + FROM + WHERE + GROUP;
+	int err = sqlite3_prepare_v2(db, listSql.c_str(), listSql.bytes() + 1, &listStmt, 0);
+	if (err != SQLITE_OK)
+	{
+		std::cerr << "Error in SQL(" << listSql << "): " << sqlite3_errmsg(db) << std::endl;
+		return false;
+	}
+	return true;
+}
+
+bool NrDb::List(const Glib::ustring& aFilter)
+{
 	if (!db) return false;
 
 	if (listStmt)
@@ -82,30 +122,15 @@ bool NrDb::List()
 		EndList();
 	}
 
-	/* count row set */
-	Glib::ustring count = SELECT_COUNT;
-	sqlite3_stmt* cntStmt = 0;
-	int err = sqlite3_prepare_v2(db, listSql.c_str(), listSql.bytes() + 1, &cntStmt, 0);
-	if (err != SQLITE_OK)
-	{
-		std::cerr << "Error in SQL: " << sqlite3_errmsg(db) << std::endl;
-		return false;
-	}
-	err = sqlite3_step(cntStmt);
-	if (err != SQLITE_DONE)
-	{
-		std::cerr << "Error in SQL: " << sqlite3_errmsg(db) << std::endl;
-		return 0;
-	}
-	listCount = sqlite3_column_int(cntStmt, 0);
-	sqlite3_finalize(cntStmt);
-
 	/* start query */
-	listSql = SELECT + FROM + WHERE + GROUP;
-	err = sqlite3_prepare_v2(db, listSql.c_str(), listSql.bytes() + 1, &listStmt, 0);
+	listSql = SELECT + FROM + WHERE;
+	if (aFilter.size())
+		listSql += " AND " + aFilter;
+	listSql += GROUP;
+	int err = sqlite3_prepare_v2(db, listSql.c_str(), listSql.bytes() + 1, &listStmt, 0);
 	if (err != SQLITE_OK)
 	{
-		std::cerr << "Error in SQL: " << sqlite3_errmsg(db) << std::endl;
+		std::cerr << "Error in SQL(" << listSql << "): " << sqlite3_errmsg(db) << std::endl;
 		return false;
 	}
 	return false;
@@ -119,9 +144,9 @@ NrCard* NrDb::Next()
 		return 0;
 	}
 	int err = sqlite3_step(listStmt);
-	if (err != SQLITE_DONE)
+	if (err != SQLITE_DONE && err != SQLITE_ROW)
 	{
-		std::cerr << "Error in SQL: " << sqlite3_errmsg(db) << std::endl;
+		std::cerr << "Error in SQLstep(" << err << "): " << sqlite3_errmsg(db) << std::endl;
 		return 0;
 	}
 	NrCard* theCard = new NrCard;
@@ -130,11 +155,12 @@ NrCard* NrDb::Next()
 	const unsigned char * keywords = sqlite3_column_text(listStmt, 2);
 	if (!name || !keywords)
 	{
-		std::cerr << "Error in SQL: " << sqlite3_errmsg(db) << std::endl;
+		std::cerr << "Error in SQL (column): " << sqlite3_errmsg(db) << std::endl;
 		return 0;
 	}
 	theCard->name = (const char*)name;
-	return 0;
+	theCard->keywords = (const char*)keywords;
+	return theCard;
 }
 
 static void no_op(void*) {}
@@ -186,3 +212,18 @@ bool NrDb::LoadImage(class NrCard* aCard)
 	return ok;
 }
 
+NrCardList NrDb::GetList(const Glib::ustring& aFilter)
+{
+	NrCardList ret;
+	if (List(aFilter))
+	{
+		NrCard* card;
+		while ((card = Next()) != 0)
+		{
+			ret.push_back(*card);
+			delete card;
+		}
+		EndList();
+	}
+	return ret;
+}
