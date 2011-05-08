@@ -74,6 +74,7 @@ bool NrDb::Import(const char* aFile)
 	err = sqlite3_exec(db, "ATTACH DATABASE aFile AS imp", callback, callback_param, &errmsg);
 	err = sqlite3_exec(db, "insert into card select * from imp.card", callback, callback_param, &errmsg);
 	err = sqlite3_exec(db, "insert into keyword select * from imp.keyword", callback, callback_param, &errmsg);
+	err = sqlite3_exec(db, "DETACH DATABASE imp", callback, callback_param, &errmsg);
 	return false;
 }
 
@@ -226,4 +227,28 @@ NrCardList NrDb::GetList(const Glib::ustring& aFilter)
 		EndList();
 	}
 	return ret;
+}
+
+NrCardList& NrDb::LoadDeck(const char* aFile, NrCardList& aList)
+{
+	NrDb tmp(aFile);
+	if (!tmp.List())
+	{
+		throw Glib::FileError(Glib::FileError::FAILED, "Cannot list deck");
+	}
+	NrCard* card;
+	while ((card = tmp.Next()) != 0)
+	{
+		aList.push_back(*card);
+		delete card;
+	}
+	tmp.EndList();
+	return aList;
+}
+
+NrCardList NrDb::LoadDeck(const char* aFile)
+{
+	NrCardList tmp;
+	LoadDeck (aFile, tmp);
+	return tmp;
 }

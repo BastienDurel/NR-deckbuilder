@@ -88,8 +88,33 @@ void NrDeckbuilder::Run()
 		builder->get_widget("unloadbtn", button);
 		button->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &NrDeckbuilder::LoadImage), (NrCard*)0));
 		*/
+
+		InitList(false);
+		InitList(true);
+		
 		LoadMaster();
+		RefreshDeck();
 		kit.run(*main_win);
+	}
+}
+
+void NrDeckbuilder::InitList(bool aDeck)
+{
+	Gtk::TreeView* list = 0;
+	if (aDeck)
+	    builder->get_widget("decktreeview", list);
+    else
+	    builder->get_widget("mastertreeview", list);
+    if (list)
+	{
+  		list->append_column("Name", MasterColumns.m_col_name);
+  		list->append_column("Type", MasterColumns.m_col_type);
+  		list->append_column("Keyw", MasterColumns.m_col_type);
+  		list->append_column("Cost", MasterColumns.m_col_cost);
+  		list->append_column("Pt", MasterColumns.m_col_points);
+  		list->append_column("Text", MasterColumns.m_col_text);
+		if (aDeck)
+			list->append_column("Count", DeckColumns.m_col_count);
 	}
 }
 
@@ -109,14 +134,25 @@ void NrDeckbuilder::LoadMaster()
 	LoadList(db->FullBegin(), db->FullEnd());
 }
 
-void NrDeckbuilder::LoadList(NrCardList::const_iterator lbegin, NrCardList::const_iterator lend)
+void NrDeckbuilder::RefreshDeck()
 {
-	Gtk::TreeView* master = 0;
-    builder->get_widget("mastertreeview", master);
-    if (master)
+	LoadList(currentDeck.begin(), currentDeck.end(), true);
+}
+
+void NrDeckbuilder::LoadList(NrCardList::const_iterator lbegin, NrCardList::const_iterator lend, bool aDeck)
+{
+	Gtk::TreeView* list = 0;
+	if (aDeck)
+	    builder->get_widget("decktreeview", list);
+    else
+	    builder->get_widget("mastertreeview", list);
+    if (list)
 	{
-		Glib::RefPtr<Gtk::ListStore> refListStore =
-			Gtk::ListStore::create(MasterColumns);
+		Glib::RefPtr<Gtk::ListStore> refListStore;
+		if (aDeck)
+			refListStore = Gtk::ListStore::create(DeckColumns);
+		else
+			refListStore = Gtk::ListStore::create(MasterColumns);
   		Gtk::TreeModel::iterator iter;
   		for (NrCardList::const_iterator citer = lbegin; citer != lend; ++citer) {
     		iter = refListStore->append();
@@ -132,14 +168,10 @@ void NrDeckbuilder::LoadList(NrCardList::const_iterator lbegin, NrCardList::cons
 			} else {
 				row[MasterColumns.m_col_points] = "";
 			}
+			if (aDeck)
+				  row[DeckColumns.m_col_count] = citer->instanceNum;
   		}
-  		master->set_model(refListStore);
-  		master->append_column("Name", MasterColumns.m_col_name);
-  		master->append_column("Type", MasterColumns.m_col_type);
-  		master->append_column("Keyw", MasterColumns.m_col_type);
-  		master->append_column("Cost", MasterColumns.m_col_cost);
-  		master->append_column("Pt", MasterColumns.m_col_points);
-  		master->append_column("Text", MasterColumns.m_col_text);
+  		list->set_model(refListStore);
     }
 
 }

@@ -30,3 +30,5 @@ libtool
 stamp-*
 *.o
 src/nr_deckbuilder
+*.am.bak
+*.in.bak

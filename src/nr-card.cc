@@ -24,7 +24,7 @@
 #include <unistd.h>
 #include <iostream>
 
-NrCard::NrCard() : base64Buffer(0), points(-1), cost(0)
+NrCard::NrCard() : base64Buffer(0), points(-1), cost(0), instanceNum(0)
 {
 }
 
@@ -36,6 +36,12 @@ NrCard::NrCard(const NrCard& a) : base64Buffer(0)
 	rulingText = a.rulingText;
 	flavorText = a.flavorText;
 	image = a.image;
+
+	instanceNum = a.instanceNum;
+	rarety = a.rarety;
+	type = a.type;
+	cost = a.cost;
+	points = a.points;
 }
 
 NrCard::~NrCard()

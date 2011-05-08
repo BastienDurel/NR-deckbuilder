@@ -47,7 +47,7 @@ public:
 class DeckListColumns : public CardListColumns
 {
 public:
-  DeckListColumns()
+  DeckListColumns() : CardListColumns()
   {
 		add(m_col_count);
   }
@@ -67,6 +67,8 @@ class NrDeckbuilder
 
 	CardListColumns MasterColumns;
 	DeckListColumns DeckColumns;
+
+	NrCardList currentDeck;
 	
 	public:
 		NrDeckbuilder(Gtk::Main&);
@@ -75,8 +77,12 @@ class NrDeckbuilder
 	protected:
 		void LoadImage(NrCard * card);
 
+		void InitList(bool aDeck);
+
+		void RefreshDeck();
+
 		void LoadMaster();
-		void LoadList(NrCardList::const_iterator lbegin, NrCardList::const_iterator lend);
+		void LoadList(NrCardList::const_iterator lbegin, NrCardList::const_iterator lend, bool aDeck=false);
 };
 
 

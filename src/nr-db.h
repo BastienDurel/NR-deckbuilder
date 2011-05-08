@@ -49,6 +49,9 @@ public:
 	NrCardList::const_iterator FullEnd() const { return fullList.end(); }
 	NrCardList GetList(const Glib::ustring& aFilter);
 
+	static NrCardList LoadDeck(const char* aFile);
+	static NrCardList& LoadDeck(const char* aFile, NrCardList& aList);
+	
 protected:
 	sqlite3* db;
 

@@ -52,7 +52,12 @@ public:
 	NrCard(const NrCard&);
 	~NrCard();
 
+	bool operator== (const NrCard& a) const { return name == a.name; }
+	bool operator< (const NrCard& a) const { return name < a.name; }
+
 	gchar* Base64Image();
+
+	gint instanceNum;// used for decks, not for reference
 	
 protected:
 	Glib::ustring name;
