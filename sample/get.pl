@@ -203,7 +203,8 @@ sub parse_content {
 # warn Dumper(\%p);
 # exit 0;
 
-my $mech = WWW::Mechanize->new();
+my $mech = WWW::Mechanize->new(onerror => undef);
+
 foreach my $set (@sets) {
   $mech->get( "http://www.netrunneronline.com/set/$set/cards/" );
 
