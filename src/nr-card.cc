@@ -24,7 +24,7 @@
 #include <unistd.h>
 #include <iostream>
 
-NrCard::NrCard() : base64Buffer(0), points(-1), cost(0), instanceNum(0)
+NrCard::NrCard() : base64Buffer(0), points(-1), cost(0), instanceNum(0), type(other)
 {
 }
 
@@ -100,4 +100,36 @@ Glib::ustring NrCard::GetRaretyStr(bool aShort) const
 		case vitale: return aShort ? "V" : "Vitale";
 	}
 	return "?";
+}
+
+void NrCard::SetType(const Glib::ustring& aStrType)
+{
+	if (aStrType == "agenda") { type = agenda; return; }
+	if (aStrType == "ice") { type = ice; return; }
+	if (aStrType == "node") { type = node; return; }
+	if (aStrType == "upgrade") { type = upgrade; return; }
+	if (aStrType == "operation") { type = operation; return; }
+	if (aStrType == "program") { type = program; return; }
+	if (aStrType == "prep") { type = prep; return; }
+	if (aStrType == "ressource") { type = ressource; return; }
+	if (aStrType == "hardware") { type = hardware; return; }
+	if (aStrType == "other") { type = other; return; }
+}
+
+Glib::ustring NrCard::GetTypeStr() const
+{
+	switch (type)
+	{
+		case agenda: return "Agenda";
+		case ice: return "Ice";
+		case node: return "Node";
+		case upgrade: return "Upgrade";
+		case operation: return "Operation";
+		case program: return "Program";
+		case prep: return "Prep";
+		case ressource: return "Ressource";
+		case hardware: return "Hardware";
+		case other: return "Other";
+	}
+	return "ERROR";
 }

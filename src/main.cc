@@ -109,21 +109,24 @@ void NrDeckbuilder::InitList(bool aDeck)
 	{
   		list->append_column("Name", MasterColumns.m_col_name);
   		list->append_column("Type", MasterColumns.m_col_type);
-  		list->append_column("Keyw", MasterColumns.m_col_type);
+  		list->append_column("Keyw", MasterColumns.m_col_keywords);
   		list->append_column("Cost", MasterColumns.m_col_cost);
   		list->append_column("Pt", MasterColumns.m_col_points);
   		list->append_column("Text", MasterColumns.m_col_text);
 		if (aDeck)
 			list->append_column("Count", DeckColumns.m_col_count);
 	}
+	Glib::RefPtr<Gtk::TreeSelection> refTreeSelection = list->get_selection();
+	refTreeSelection->signal_changed().connect(
+	     sigc::bind(sigc::mem_fun(*this, &NrDeckbuilder::onSelect), list));
 }
 
-void NrDeckbuilder::LoadImage(NrCard * card)
+void NrDeckbuilder::LoadImage(NrCard& card)
 {
 	if (img)
 	{
-		if (card && card->GetImage())
-			img->set(card->GetImage());
+		if (card.GetImage())
+			img->set(card.GetImage());
 		else 
 			img->set(Gtk::Stock::MISSING_IMAGE, Gtk::ICON_SIZE_LARGE_TOOLBAR);
 	}
@@ -160,6 +163,7 @@ void NrDeckbuilder::LoadList(NrCardList::const_iterator lbegin, NrCardList::cons
 			
     		row[MasterColumns.m_col_name] = citer->GetName();
     		row[MasterColumns.m_col_text] = citer->GetText();
+    		row[MasterColumns.m_col_type] = citer->GetTypeStr();
     		row[MasterColumns.m_col_keywords] = citer->GetKeywords();
     		row[MasterColumns.m_col_cost] = citer->GetCost();
 			if (citer->GetPoints() > -1) {
@@ -174,4 +178,26 @@ void NrDeckbuilder::LoadList(NrCardList::const_iterator lbegin, NrCardList::cons
   		list->set_model(refListStore);
     }
 
+}
+
+void NrDeckbuilder::onSelect(Gtk::TreeView* aTreeView)
+{
+	Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
+    aTreeView->get_selection();
+	Gtk::TreeModel::iterator iter = refTreeSelection->get_selected();
+	if (iter) //If anything is selected
+	{
+		Gtk::TreeModel::Row row = *iter;
+		try
+		{
+			NrCard& card = db->Seek(row[MasterColumns.m_col_name]);
+			if (!card.GetImage()) 
+				db->LoadImage(card);
+			LoadImage(card);
+		}
+		catch (Glib::Exception& ex)
+		{
+			std::cerr << ex.what() << std::endl;
+		}
+	}
 }

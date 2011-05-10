@@ -75,7 +75,7 @@ class NrDeckbuilder
 		void Run();
 
 	protected:
-		void LoadImage(NrCard * card);
+		void LoadImage(NrCard& card);
 
 		void InitList(bool aDeck);
 
@@ -83,6 +83,10 @@ class NrDeckbuilder
 
 		void LoadMaster();
 		void LoadList(NrCardList::const_iterator lbegin, NrCardList::const_iterator lend, bool aDeck=false);
+
+		void onSelect(Gtk::TreeView* aTreeView);
+
+		
 };
 
 

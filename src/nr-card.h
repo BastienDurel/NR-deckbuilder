@@ -32,6 +32,7 @@ class NrCard
 	
 public:
 
+	typedef enum { corpo, runner } Side;
 	typedef enum { rare, uncommon, common, vitale } Rarety;
 	typedef enum { agenda, ice, node, upgrade, operation, program, prep, ressource, hardware, other } Type;
 	
@@ -45,14 +46,17 @@ public:
 	Rarety GetRarety() const { return rarety; }
 	Glib::ustring GetRaretyStr(bool aShort=false) const;
 	Type GetType() const { return type; }
+	Glib::ustring GetTypeStr() const;
 	guint GetCost() const { return cost; }
 	gint GetPoints() const { return points; }
+	Side GetSide() const { return side; }
 	
 	static NrCard* Sample();
 	NrCard(const NrCard&);
 	~NrCard();
 
 	bool operator== (const NrCard& a) const { return name == a.name; }
+	bool operator== (const Glib::ustring& a) const { return name == a; }
 	bool operator< (const NrCard& a) const { return name < a.name; }
 
 	gchar* Base64Image();
@@ -69,8 +73,11 @@ protected:
 	Glib::RefPtr<Gdk::Pixbuf> image;
 	Rarety rarety;
 	Type type;
+	Side side;
 	guint cost;
 	gint points; // means agenda points, ice strenght. -1 for no points.
+
+	void SetType(const Glib::ustring& aStrType);
 	
 private:
 	gchar* base64Buffer;

@@ -20,6 +20,7 @@
 #include "nr-db.h"
 #include <stdexcept>
 #include <iostream>
+#include <algorithm>
 #include "nr-card.h"
 #include <giomm/memoryinputstream.h>
 
@@ -74,11 +75,12 @@ bool NrDb::Import(const char* aFile)
 	err = sqlite3_exec(db, "ATTACH DATABASE aFile AS imp", callback, callback_param, &errmsg);
 	err = sqlite3_exec(db, "insert into card select * from imp.card", callback, callback_param, &errmsg);
 	err = sqlite3_exec(db, "insert into keyword select * from imp.keyword", callback, callback_param, &errmsg);
+	err = sqlite3_exec(db, "insert into illustration select * from imp.illustration", callback, callback_param, &errmsg);
 	err = sqlite3_exec(db, "DETACH DATABASE imp", callback, callback_param, &errmsg);
 	return false;
 }
 
-static const Glib::ustring SELECT("select card.name, card.cost, group_concat(keyword.keyword, ' - ') keywords ");
+static const Glib::ustring SELECT("select card.name, card.cost, group_concat(keyword.keyword, ' - ') keywords, points, text, flavortext, runner, lower(type) ");
 static const Glib::ustring SELECT_COUNT("select count(1) from card");
 static const Glib::ustring FROM("from card, keyword ");
 static const Glib::ustring WHERE("where card.name = keyword.card ");
@@ -139,54 +141,104 @@ bool NrDb::List(const Glib::ustring& aFilter)
 
 NrCard* NrDb::Next()
 {
+	const int EXPECTED_COLUMNS = 8;
 	if (!listStmt)
 	{
 		std::cerr << "Statement invalid !" << std::endl;
 		return 0;
 	}
 	int err = sqlite3_step(listStmt);
-	if (err != SQLITE_DONE && err != SQLITE_ROW)
+	if (err == SQLITE_DONE)
+		return 0;
+	if (err != SQLITE_ROW)
 	{
 		std::cerr << "Error in SQLstep(" << err << "): " << sqlite3_errmsg(db) << std::endl;
 		return 0;
 	}
 	NrCard* theCard = new NrCard;
-	const unsigned char * name = sqlite3_column_text(listStmt, 0);
-	int cost = sqlite3_column_int(listStmt, 1);
-	const unsigned char * keywords = sqlite3_column_text(listStmt, 2);
-	if (!name || !keywords)
+	int count = sqlite3_column_count(listStmt);
+	if (count != EXPECTED_COLUMNS)
 	{
-		std::cerr << "Error in SQL (column): " << sqlite3_errmsg(db) << std::endl;
+		std::cerr << "Error in column count: " << count << " - " << EXPECTED_COLUMNS << " expected" << std::endl;
+		delete theCard;
+		return 0;
+	}
+	const unsigned char * name = sqlite3_column_text(listStmt, 0);
+	if (!name)
+	{
+		std::cerr << "Error in SQL (name column): " << sqlite3_errmsg(db) << std::endl;
+		delete theCard;
 		return 0;
 	}
 	theCard->name = (const char*)name;
-	theCard->keywords = (const char*)keywords;
+	theCard->cost = sqlite3_column_int(listStmt, 1);
+	int type = sqlite3_column_type(listStmt, 2);
+	if (type == SQLITE_TEXT)
+	{
+		const unsigned char * keywords = sqlite3_column_text(listStmt, 2);
+		if (!keywords)
+		{
+			std::cerr << "Error in SQL (keywords column): " << sqlite3_errmsg(db) << std::endl;
+			delete theCard;
+			return 0;
+		}
+		theCard->keywords = (const char*)keywords;
+	}
+	type = sqlite3_column_type(listStmt, 3);
+	if (type == SQLITE_INTEGER)
+	{
+		theCard->points = sqlite3_column_int(listStmt, 3);
+	}
+	const unsigned char * text = sqlite3_column_text(listStmt, 4);
+	if (!text)
+	{
+		std::cerr << "Error in SQL (text column): " << sqlite3_errmsg(db) << std::endl;
+		delete theCard;
+		return 0;
+	}
+	theCard->gameText = (const char*)text;
+	type = sqlite3_column_type(listStmt, 5);
+	if (type == SQLITE_TEXT)
+	{
+		const unsigned char * ftext = sqlite3_column_text(listStmt, 5);
+		theCard->flavorText = (const char*)ftext;
+	}
+	int runner = sqlite3_column_int(listStmt, 6);
+	theCard->side = runner ? NrCard::runner : NrCard::corpo;
+	const unsigned char * ctype = sqlite3_column_text(listStmt, 7);
+	if (!ctype)
+	{
+		std::cerr << "Error in SQL (type column): " << sqlite3_errmsg(db) << std::endl;
+		delete theCard;
+		return 0;
+	}
+	theCard->SetType((const char*)ctype);
 	return theCard;
 }
 
 static void no_op(void*) {}
 
-bool NrDb::LoadImage(class NrCard* aCard)
+bool NrDb::LoadImage(class NrCard& aCard)
 {
-	Glib::ustring count = "select data from illustration where card = ?1";
+	Glib::ustring count = "select data from illustration where card = ?";
 	sqlite3_stmt* loadStmt = 0;
-	int err = sqlite3_prepare_v2(db, listSql.c_str(), listSql.bytes() + 1, &loadStmt, 0);
+	int err = sqlite3_prepare_v2(db, count.c_str(), count.bytes() + 1, &loadStmt, 0);
 	if (err != SQLITE_OK)
 	{
-		std::cerr << "Error in SQL: " << sqlite3_errmsg(db) << std::endl;
+		std::cerr << "Error in SQL(prepare): " << sqlite3_errmsg(db) << std::endl;
 		return false;
 	}
-	err = sqlite3_bind_text(loadStmt, 1, aCard->name.c_str(), aCard->name.bytes(), SQLITE_TRANSIENT);
+	err = sqlite3_bind_text(loadStmt, 1, aCard.name.c_str(), aCard.name.bytes(), SQLITE_TRANSIENT);
 	if (err != SQLITE_OK)
 	{
-		std::cerr << "Error in SQL: " << sqlite3_errmsg(db) << std::endl;
+		std::cerr << "Error in SQL(bind): " << sqlite3_errmsg(db) << std::endl;
 		sqlite3_finalize(loadStmt);
 		return false;
 	}
 	err = sqlite3_step(loadStmt);
-	if (err != SQLITE_DONE)
+	if (err != SQLITE_DONE && err != SQLITE_ROW)
 	{
-		std::cerr << "Error in SQL: " << sqlite3_errmsg(db) << std::endl;
+		std::cerr << "Error in SQL(step): " << sqlite3_errmsg(db) << std::endl;
 		sqlite3_finalize(loadStmt);
 		return false;
 	}
@@ -195,10 +247,10 @@ bool NrDb::LoadImage(class NrCard* aCard)
 	bool ok = true;
 	try
 	{
-		aCard->image.clear();
+		aCard.image.clear();
 		Glib::RefPtr<Gio::MemoryInputStream> st = Gio::MemoryInputStream::create();
 		st->add_data(data, datasize, no_op);
-		aCard->image = Gdk::Pixbuf::create_from_stream(st);	
+		aCard.image = Gdk::Pixbuf::create_from_stream(st);	
 	}
 	catch (const Gdk::PixbufError& e)
 	{
@@ -251,4 +303,13 @@ NrCardList NrDb::LoadDeck(const char* aFile)
 	NrCardList tmp;
 	LoadDeck (aFile, tmp);
 	return tmp;
+}
+
+NrCard& NrDb::Seek(const Glib::ustring& aName)
+{
+	NrCardList::iterator lit = std::find(fullList.begin(), fullList.end(), aName);
+	if (lit == fullList.end())
+		throw Glib::OptionError(Glib::OptionError::BAD_VALUE, "Not found");
+	else
+		return *lit;
 }
