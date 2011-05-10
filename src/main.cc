@@ -118,10 +118,10 @@ void NrDeckbuilder::InitList(bool aDeck)
   		list->append_column("Cost", MasterColumns.m_col_cost);
   		list->append_column("Pt", MasterColumns.m_col_points);
   		list->append_column("Text", MasterColumns.m_col_text);
+		Glib::RefPtr<Gtk::TreeSelection> refTreeSelection = list->get_selection();
+		refTreeSelection->signal_changed().connect(
+			sigc::bind(sigc::mem_fun(*this, &NrDeckbuilder::onSelect), list));
 	}
-	Glib::RefPtr<Gtk::TreeSelection> refTreeSelection = list->get_selection();
-	refTreeSelection->signal_changed().connect(
-	     sigc::bind(sigc::mem_fun(*this, &NrDeckbuilder::onSelect), list));
 }
 
 void NrDeckbuilder::LoadImage(NrCard& card)
