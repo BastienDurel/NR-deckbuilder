@@ -2,11 +2,23 @@
 # -*- mode: cperl; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-
 use WWW::Mechanize;
 use HTML::TreeBuilder;
+use DBI;
+use DBD::SQLite;
+use DBI qw(:sql_types);
 use Data::Dumper;
+use Encode;
+use File::Slurp;
+use Text::Iconv;
+
+use utf8;
+use strict;
+
+# Netrunner Online declares a latin-1 encoding, but uses windows-1252 (TM)
+my $converter = Text::Iconv->new("windows-1252", "utf-8");
 
 my @cards;
-#my @sets = ('limited', 'proteus', 'classic');
-my @sets = ('classic');
+my @sets = ('limited', 'proteus', 'classic');
+#my @sets = ('classic');
 
 sub enlarge_card {
   my ($mech, $card) = @_;
@@ -16,8 +28,9 @@ sub enlarge_card {
   my @img = $mech->images();
   foreach my $img (@img) {
 	if ($img->url() =~ /^\/images\/cards\//) {
-	  print $img->url_abs(), "\n";
+	  #print $img->url_abs(), "\n";
 	  #TODO: get
+	  return $img->url_abs();
 	}
   }
 }
@@ -70,7 +83,7 @@ sub next_raw_content {
   my @n = $p->content_list();
   #return $n[1]->as_text();
   my $txt = get_raw_content($n[1]);
-  chop $txt if substr $txt, -1 eq "\n";
+  if (substr($txt, -1) eq "\n") { chop $txt; }
   return $txt;
 }
 
@@ -97,7 +110,7 @@ sub parse_content {
   # Rarity: Y
   # ...
 
-  @div = $root->look_down("_tag", "div", "class", "smaller");
+  my @div = $root->look_down("_tag", "div", "class", "smaller");
   foreach my $pdiv (@div) {
 	# seek first td with a 'Card Name:' content
 	my $name = get_td_containing('Card Name:', $pdiv);
@@ -154,9 +167,10 @@ sub parse_content {
 }
 
 ## test
+# my %p;
 # my $troot = HTML::TreeBuilder->new();
 # $troot->parse_file('sample.html');
-# my %p = parse_content($troot);
+# %p = parse_content($troot);
 # warn Dumper(\%p);
 # my $troot2 = HTML::TreeBuilder->new();
 # $troot2->parse_file('sample2.html');
@@ -174,13 +188,20 @@ sub parse_content {
 # $troot5->parse_file('sample5.html');
 # %p = parse_content($troot5);
 # warn Dumper(\%p);
+# my $troot6 = HTML::TreeBuilder->new();
+# my $s6 = read_file('sample6.html');
+# $troot6->utf8_mode(1);
+# $troot6->parse_content($converter->convert($s6));
+# print $converter->convert($s6);
+# %p = parse_content($troot6);
+# warn Dumper(\%p);
 # exit 0;
 
 my $mech = WWW::Mechanize->new();
 foreach my $set (@sets) {
   $mech->get( "http://www.netrunneronline.com/set/$set/cards/" );
 
-  @links = $mech->links();
+  my @links = $mech->links();
   foreach my $link (@links) {
 	if ($link->url =~ /^\/cards\/.*\//) {
 	  #print $link->url_abs(), "\n";
@@ -189,20 +210,77 @@ foreach my $set (@sets) {
   }
 }
 
+my $dbargs = { AutoCommit => 0,
+			   PrintError => 1};
+
+my $dbh = DBI->connect("dbi:SQLite:dbname=test.db", "", "", $dbargs);
+my $img_sth = $dbh->prepare("INSERT INTO illustration (card, version, data)".
+							" VALUES (?, ?, ?)");
+my $card_sth = $dbh->prepare("INSERT INTO card ".
+							 "(name,cost,type,text,flavortext,points,runner)".
+							 " VALUES (?,?,?,?,?,?,?)");
+my $key_sth = $dbh->prepare("INSERT INTO keyword (card, keyword) VALUES (?,?)");
+
+my $count = 0;
+
 foreach my $card (@cards) {
   $mech->get($card);
   #warn Dumper($mech->content());
   my $root = HTML::TreeBuilder->new();
-  $root->parse_content($mech->content());
+  $root->utf8_mode(1);
+  $root->parse_content($converter->convert($mech->content()));
 
-  parse_content($root);
+  my %h = parse_content($root); #warn Dumper(\%h);
+  my @keywords = split '-', $h{keywords};
 
-  @links = $mech->links();
+  print $h{name}, "\n";
+
+  $card_sth->bind_param(1, $h{name}, SQL_VARCHAR);
+  $card_sth->bind_param(2, $h{cost}, SQL_INTEGER);
+  $card_sth->bind_param(3, shift @keywords, SQL_VARCHAR); #type is first keyword
+  $card_sth->bind_param(4, $h{text}, SQL_VARCHAR);
+  if (defined $h{flavor} && !($h{flavor} eq '')) {
+	$card_sth->bind_param(5, $h{flavor}, SQL_VARCHAR);
+  } else {
+	$card_sth->bind_param(5, undef);
+  }
+  if (defined $h{points} && !($h{points} eq '')) {
+	$card_sth->bind_param(6, $h{points}, SQL_INTEGER);
+  } else {
+	$card_sth->bind_param(6, undef);
+  }
+  my $is_runner = (lc($h{player}) eq lc('Runner'));
+  $card_sth->bind_param(7, $is_runner, SQL_INTEGER);
+  my $res = $card_sth->execute();
+  if (defined $res) {
+	if (scalar(@keywords) == 0) {
+	  # put an empty keyword to allow group_concat selection
+	  $key_sth->bind_param(1, $h{name}, SQL_VARCHAR);
+	  $key_sth->bind_param(2, '', SQL_VARCHAR);
+	  $key_sth->execute();
+	}
+	foreach my $k (@keywords) {
+	  $key_sth->bind_param(1, $h{name}, SQL_VARCHAR);
+	  $key_sth->bind_param(2, $k, SQL_VARCHAR);
+	  $key_sth->execute();
+	}
+  }
+
+  my @links = $mech->links();
   foreach my $link (@links) {
 	#print $link->url_abs(), "\n";
 	if ($link->url =~ /javascript:enlargeCard\('(.*?)'\);/) {
-	  enlarge_card($mech, $1);
+	  my $img_url = enlarge_card($mech, $1);
+	  $mech->get($img_url);
+	  my $img_blob = $mech->content();
+
+	  $img_sth->bind_param(1, $h{name}, SQL_VARCHAR);
+	  $img_sth->bind_param(2, $h{set}, SQL_VARCHAR);
+	  $img_sth->bind_param(3, $img_blob, SQL_BLOB);
+	  $img_sth->execute();
 	}
   }
-  last;
 }
+
+$dbh->commit();
+$dbh->disconnect();
