@@ -154,27 +154,27 @@ sub parse_content {
 }
 
 ## test
-my $troot = HTML::TreeBuilder->new();
-$troot->parse_file('sample.html');
-my %p = parse_content($troot);
-warn Dumper(\%p);
-my $troot2 = HTML::TreeBuilder->new();
-$troot2->parse_file('sample2.html');
-%p = parse_content($troot2);
-warn Dumper(\%p);
-my $troot3 = HTML::TreeBuilder->new();
-$troot3->parse_file('sample3.html');
-%p = parse_content($troot3);
-warn Dumper(\%p);
-my $troot4 = HTML::TreeBuilder->new();
-$troot4->parse_file('sample4.html');
-%p = parse_content($troot4);
-warn Dumper(\%p);
-my $troot5 = HTML::TreeBuilder->new();
-$troot5->parse_file('sample5.html');
-%p = parse_content($troot5);
-warn Dumper(\%p);
-exit 0;
+# my $troot = HTML::TreeBuilder->new();
+# $troot->parse_file('sample.html');
+# my %p = parse_content($troot);
+# warn Dumper(\%p);
+# my $troot2 = HTML::TreeBuilder->new();
+# $troot2->parse_file('sample2.html');
+# %p = parse_content($troot2);
+# warn Dumper(\%p);
+# my $troot3 = HTML::TreeBuilder->new();
+# $troot3->parse_file('sample3.html');
+# %p = parse_content($troot3);
+# warn Dumper(\%p);
+# my $troot4 = HTML::TreeBuilder->new();
+# $troot4->parse_file('sample4.html');
+# %p = parse_content($troot4);
+# warn Dumper(\%p);
+# my $troot5 = HTML::TreeBuilder->new();
+# $troot5->parse_file('sample5.html');
+# %p = parse_content($troot5);
+# warn Dumper(\%p);
+# exit 0;
 
 my $mech = WWW::Mechanize->new();
 foreach my $set (@sets) {
