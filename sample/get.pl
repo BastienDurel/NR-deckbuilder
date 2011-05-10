@@ -245,6 +245,7 @@ foreach my $card (@cards) {
 	$card_sth->bind_param(5, undef);
   }
   if (defined $h{points} && !($h{points} eq '')) {
+	if ($h{points} eq '*' || $h{points} eq 'X') { $h{points} = -1; }
 	$card_sth->bind_param(6, $h{points}, SQL_INTEGER);
   } else {
 	$card_sth->bind_param(6, undef);
