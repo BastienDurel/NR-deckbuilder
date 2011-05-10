@@ -16,6 +16,12 @@ use strict;
 # Netrunner Online declares a latin-1 encoding, but uses windows-1252 (TM)
 my $converter = Text::Iconv->new("windows-1252", "utf-8");
 
+if ($#ARGV != -1) {
+  print "dumping to $ARGV[0]\n";
+  open(STDOUT, ">>$ARGV[0]") || die "Can't redirect stdout";
+  open(STDERR, ">>$ARGV[0]") || die "Can't redirect stderr";
+}
+
 my @cards;
 my @sets = ('limited', 'proteus', 'classic');
 #my @sets = ('classic');
@@ -225,6 +231,7 @@ my $count = 0;
 
 foreach my $card (@cards) {
   $mech->get($card);
+  if (!$mech->success()) { print "Ignore $card \n"; next; }
   #warn Dumper($mech->content());
   my $root = HTML::TreeBuilder->new();
   $root->utf8_mode(1);
@@ -273,12 +280,14 @@ foreach my $card (@cards) {
 	if ($link->url =~ /javascript:enlargeCard\('(.*?)'\);/) {
 	  my $img_url = enlarge_card($mech, $1);
 	  $mech->get($img_url);
-	  my $img_blob = $mech->content();
+	  if ($mech->success()) {
+		my $img_blob = $mech->content();
 
-	  $img_sth->bind_param(1, $h{name}, SQL_VARCHAR);
-	  $img_sth->bind_param(2, $h{set}, SQL_VARCHAR);
-	  $img_sth->bind_param(3, $img_blob, SQL_BLOB);
-	  $img_sth->execute();
+		$img_sth->bind_param(1, $h{name}, SQL_VARCHAR);
+		$img_sth->bind_param(2, $h{set}, SQL_VARCHAR);
+		$img_sth->bind_param(3, $img_blob, SQL_BLOB);
+		$img_sth->execute();
+	  } else { print "Cannot get image $img_url \n"; }
 	}
   }
 }
