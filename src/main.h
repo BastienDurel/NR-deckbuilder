@@ -53,6 +53,7 @@ public:
   }
 
 	Gtk::TreeModelColumn<guint> m_col_count;
+	Gtk::TreeModelColumn<bool> m_col_print;
 };
 
 class NrDeckbuilder

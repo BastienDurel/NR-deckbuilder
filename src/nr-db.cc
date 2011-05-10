@@ -254,6 +254,11 @@ bool NrDb::LoadImage(class NrCard& aCard)
 	}
 	catch (const Gdk::PixbufError& e)
 	{
+		std::cout << "PixbufError: " << e.what() << std::endl;
+		ok = false;
+	}
+	catch (const Glib::Error& e)
+	{
 		std::cout << e.what() << std::endl;
 		ok = false;
 	}

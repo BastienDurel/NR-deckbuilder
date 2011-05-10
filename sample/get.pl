@@ -244,6 +244,7 @@ foreach my $card (@cards) {
   print $h{name}, "\n";
 
   $card_sth->bind_param(1, $h{name}, SQL_VARCHAR);
+  if ($h{cost} eq '*' || $h{cost} eq 'X') { $h{cost} = -1; }
   $card_sth->bind_param(2, $h{cost}, SQL_INTEGER);
   $card_sth->bind_param(3, shift @keywords, SQL_VARCHAR); #type is first keyword
   $card_sth->bind_param(4, $h{text}, SQL_VARCHAR);
@@ -290,6 +291,11 @@ foreach my $card (@cards) {
 		$img_sth->execute();
 	  } else { print "Cannot get image $img_url \n"; }
 	}
+  }
+
+  if ($count++ == 100) {
+	$dbh->commit();
+	$count=0;
   }
 }
 

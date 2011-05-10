@@ -108,13 +108,16 @@ void NrDeckbuilder::InitList(bool aDeck)
     if (list)
 	{
   		list->append_column("Name", MasterColumns.m_col_name);
+		if (aDeck)
+		{
+			list->append_column_editable("Count", DeckColumns.m_col_count);
+			list->append_column_editable("Print", DeckColumns.m_col_print);			
+		}
   		list->append_column("Type", MasterColumns.m_col_type);
   		list->append_column("Keyw", MasterColumns.m_col_keywords);
   		list->append_column("Cost", MasterColumns.m_col_cost);
   		list->append_column("Pt", MasterColumns.m_col_points);
   		list->append_column("Text", MasterColumns.m_col_text);
-		if (aDeck)
-			list->append_column("Count", DeckColumns.m_col_count);
 	}
 	Glib::RefPtr<Gtk::TreeSelection> refTreeSelection = list->get_selection();
 	refTreeSelection->signal_changed().connect(
@@ -139,6 +142,7 @@ void NrDeckbuilder::LoadMaster()
 
 void NrDeckbuilder::RefreshDeck()
 {
+	currentDeck.insert(currentDeck.end(), db->FullBegin(), db->FullEnd());
 	LoadList(currentDeck.begin(), currentDeck.end(), true);
 }
 
