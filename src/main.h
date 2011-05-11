@@ -50,6 +50,7 @@ public:
   DeckListColumns() : CardListColumns()
   {
 		add(m_col_count);
+		add(m_col_print);
   }
 
 	Gtk::TreeModelColumn<guint> m_col_count;
@@ -77,6 +78,7 @@ class NrDeckbuilder
 
 	protected:
 		void LoadImage(NrCard& card);
+		void InitActions();
 
 		void InitList(bool aDeck);
 
@@ -86,6 +88,12 @@ class NrDeckbuilder
 		void LoadList(NrCardList::const_iterator lbegin, NrCardList::const_iterator lend, bool aDeck=false);
 
 		void onSelect(Gtk::TreeView* aTreeView);
+
+		void onNewClick();
+		void onOpenClick();
+		void onSaveClick();
+		void onSaveAsClick();
+		void onQuitClick();
 
 		
 };

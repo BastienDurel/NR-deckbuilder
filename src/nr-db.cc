@@ -24,8 +24,9 @@
 #include "nr-card.h"
 #include <giomm/memoryinputstream.h>
 #include <giomm/file.h>
+#include "s-q-l-error.h"
 
-NrDb::NrDb(const char* aFile) : db(0), listStmt(0)
+NrDb::NrDb(const char* aFile) : db(0), listStmt(0), isDeck(false)
 {
 	if (sqlite3_open_v2(aFile, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, 0) != SQLITE_OK)
 	{
@@ -310,24 +311,40 @@ NrCardList NrDb::GetList(const Glib::ustring& aFilter)
 	return ret;
 }
 
-NrCardList& NrDb::LoadDeck(const char* aFile, NrCardList& aList)
+NrCardList& NrDb::LoadDeck(const char* aFile, NrCardList& aList) throw (Glib::Exception)
 {
+	aList.clear();
+
 	NrDb tmp(aFile);
-	if (!tmp.List())
+	if (!tmp.db) throw Glib::FileError(Glib::FileError::FAILED, "No DB handle");
+
+	sqlite3_stmt* stmt;
+	Glib::ustring load = "select card, count, print from deck";
+	int err = sqlite3_prepare_v2(tmp.db, load.c_str(), load.bytes() + 1, &stmt, 0);
+	if (err != SQLITE_OK)
+		throw SQLError("Error in SQL(prepare)", sqlite3_errmsg(tmp.db));
+	while ((err = sqlite3_step(stmt)) == SQLITE_ROW)
 	{
-		throw Glib::FileError(Glib::FileError::FAILED, "Cannot list deck");
-	}
-	NrCard* card;
-	while ((card = tmp.Next()) != 0)
-	{
-		aList.push_back(*card);
-		delete card;
-	}
-	tmp.EndList();
+		int count = sqlite3_column_count(stmt);
+		if (count != 3) throw SQLError("Error in SQL(step)", "count != 3");
+
+		const unsigned char * card = sqlite3_column_text(stmt, 0);
+		if (!card)
+			throw SQLError("Error in SQL (name column): ", sqlite3_errmsg(tmp.db));
+		NrCard refCard = Seek((const char*)card);
+		refCard.instanceNum = sqlite3_column_int(stmt, 1);
+		refCard.print = sqlite3_column_int(stmt, 2);
+		aList.push_back(refCard);
+	} 
+	if (err != SQLITE_DONE)
+		throw SQLError("Error in SQL(step)", sqlite3_errmsg(tmp.db));
+
+	sqlite3_finalize(stmt);
+	
 	return aList;
 }
 
-NrCardList NrDb::LoadDeck(const char* aFile)
+NrCardList NrDb::LoadDeck(const char* aFile) throw (Glib::Exception)
 {
 	NrCardList tmp;
 	LoadDeck (aFile, tmp);
@@ -338,7 +355,7 @@ NrCard& NrDb::Seek(const Glib::ustring& aName)
 {
 	NrCardList::iterator lit = std::find(fullList.begin(), fullList.end(), aName);
 	if (lit == fullList.end())
-		throw Glib::OptionError(Glib::OptionError::BAD_VALUE, "Not found");
+		throw Glib::OptionError(Glib::OptionError::BAD_VALUE, "Card " + aName + " not found");
 	else
 		return *lit;
 }

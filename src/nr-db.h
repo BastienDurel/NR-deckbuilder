@@ -51,8 +51,8 @@ public:
 
 	NrCard& Seek(const Glib::ustring& aName);
 
-	static NrCardList LoadDeck(const char* aFile);
-	static NrCardList& LoadDeck(const char* aFile, NrCardList& aList);
+	NrCardList LoadDeck(const char* aFile) throw (Glib::Exception);
+	NrCardList& LoadDeck(const char* aFile, NrCardList& aList) throw (Glib::Exception);
 	
 protected:
 	sqlite3* db;
@@ -62,6 +62,7 @@ protected:
 	int listCount;
 
 	NrCardList fullList;
+	bool isDeck;
 	
 private:
 	NrDb(const char* aFile);

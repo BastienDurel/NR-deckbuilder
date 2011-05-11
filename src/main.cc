@@ -91,11 +91,42 @@ void NrDeckbuilder::Run()
 
 		InitList(false);
 		InitList(true);
+		InitActions();
 		
 		LoadMaster();
 		RefreshDeck();
 		kit.run(*main_win);
 	}
+}
+
+void NrDeckbuilder::InitActions()
+{
+	Glib::RefPtr<Gtk::Action> a;
+	Glib::RefPtr<Glib::Object> o;
+	o = builder->get_object("actionQuit");
+	if (o) a = Glib::RefPtr<Gtk::Action>::cast_dynamic(o);
+	if (a) a->signal_activate().
+		connect(sigc::mem_fun(*this, &NrDeckbuilder::onQuitClick));
+	
+	o = builder->get_object("actionNew");
+	if (o) a = Glib::RefPtr<Gtk::Action>::cast_dynamic(o); else a.clear();
+	if (a) a->signal_activate().
+		connect(sigc::mem_fun(*this, &NrDeckbuilder::onNewClick));
+	
+	o = builder->get_object("actionSave");
+	if (o) a = Glib::RefPtr<Gtk::Action>::cast_dynamic(o); else a.clear();
+	if (a) a->signal_activate().
+		connect(sigc::mem_fun(*this, &NrDeckbuilder::onSaveClick));
+	
+	o = builder->get_object("actionSaveAs");
+	if (o) a = Glib::RefPtr<Gtk::Action>::cast_dynamic(o); else a.clear();
+	if (a) a->signal_activate().
+		connect(sigc::mem_fun(*this, &NrDeckbuilder::onSaveAsClick));
+	
+	o = builder->get_object("actionOpen");
+	if (o) a = Glib::RefPtr<Gtk::Action>::cast_dynamic(o); else a.clear();
+	if (a) a->signal_activate().
+		connect(sigc::mem_fun(*this, &NrDeckbuilder::onOpenClick));
 }
 
 void NrDeckbuilder::InitList(bool aDeck)
@@ -142,7 +173,7 @@ void NrDeckbuilder::LoadMaster()
 
 void NrDeckbuilder::RefreshDeck()
 {
-	currentDeck.insert(currentDeck.end(), db->FullBegin(), db->FullEnd());
+	//currentDeck.insert(currentDeck.end(), db->FullBegin(), db->FullEnd());
 	LoadList(currentDeck.begin(), currentDeck.end(), true);
 }
 
@@ -176,8 +207,10 @@ void NrDeckbuilder::LoadList(NrCardList::const_iterator lbegin, NrCardList::cons
 			} else {
 				row[MasterColumns.m_col_points] = "";
 			}
-			if (aDeck)
-				  row[DeckColumns.m_col_count] = citer->instanceNum;
+			if (aDeck) {
+				row[DeckColumns.m_col_count] = citer->instanceNum;
+				row[DeckColumns.m_col_print] = citer->print;
+			}
   		}
   		list->set_model(refListStore);
     }
@@ -205,3 +238,53 @@ void NrDeckbuilder::onSelect(Gtk::TreeView* aTreeView)
 		}
 	}
 }
+
+
+void NrDeckbuilder::onNewClick()
+{
+	currentDeck.clear();
+	RefreshDeck();
+}
+
+void NrDeckbuilder::onOpenClick()
+{
+	Gtk::FileChooserDialog dialog("Please choose a file",
+	                              Gtk::FILE_CHOOSER_ACTION_OPEN);
+	//dialog.set_transient_for(*this);
+	dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+	dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
+
+	Gtk::FileFilter filter_nrdb;
+	filter_nrdb.set_name("Netrunner decks");
+	filter_nrdb.add_pattern("*.nrdb");
+	dialog.add_filter(filter_nrdb);
+
+	int result = dialog.run();
+	if (result == Gtk::RESPONSE_OK)
+	{
+		currentDeck.clear();
+		try {
+			db->LoadDeck(dialog.get_filename().c_str(), currentDeck);
+		} catch (Glib::Exception& ex) {
+			std::cerr << ex.what() << std::endl;
+			Gtk::MessageDialog msg(ex.what(), false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK, true);
+			msg.run();
+		}
+	}
+	
+	RefreshDeck();
+}
+
+void NrDeckbuilder::onSaveClick()
+{
+}
+
+void NrDeckbuilder::onSaveAsClick()
+{
+}
+
+void NrDeckbuilder::onQuitClick()
+{
+	kit.quit();
+}
+

@@ -62,6 +62,7 @@ public:
 	gchar* Base64Image();
 
 	gint instanceNum;// used for decks, not for reference
+	bool print;// used for decks, not for reference
 	
 protected:
 	Glib::ustring name;

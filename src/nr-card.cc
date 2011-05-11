@@ -36,12 +36,14 @@ NrCard::NrCard(const NrCard& a) : base64Buffer(0)
 	rulingText = a.rulingText;
 	flavorText = a.flavorText;
 	image = a.image;
-
-	instanceNum = a.instanceNum;
+	
 	rarety = a.rarety;
 	type = a.type;
 	cost = a.cost;
 	points = a.points;
+
+	instanceNum = a.instanceNum;
+	print = a.print;
 }
 
 NrCard::~NrCard()
