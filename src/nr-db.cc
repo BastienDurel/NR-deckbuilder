@@ -23,6 +23,7 @@
 #include <algorithm>
 #include "nr-card.h"
 #include <giomm/memoryinputstream.h>
+#include <giomm/file.h>
 
 NrDb::NrDb(const char* aFile) : db(0), listStmt(0)
 {
@@ -50,11 +51,34 @@ NrDb::~NrDb()
 
 NrDb* NrDb::Master()
 {
-	NrDb* masterDb = new NrDb("sample/test.db");
+	const std::string cur = Glib::get_current_dir();
+	std::vector<std::string> fileToSeek;
+	fileToSeek.push_back(Glib::build_filename(Glib::get_home_dir(), 
+	                     Glib::build_filename(".NR-deckbuilder", 
+	                                          "master.db")));
+	fileToSeek.push_back(Glib::build_filename(cur, "master.db"));
+	fileToSeek.push_back(Glib::build_filename(cur, 
+							Glib::build_filename("sample", "master.db")));
+	fileToSeek.push_back(Glib::build_filename(cur, 
+							Glib::build_filename("sample", "nr-full.db")));
+	fileToSeek.push_back(Glib::build_filename(cur, 
+							Glib::build_filename("sample", "test.db")));
+	
+	Glib::RefPtr<Gio::File> lGFile;
+	for (std::vector<std::string>::iterator it = fileToSeek.begin(); 
+	     it != fileToSeek.end(); ++it)
+	{
+		std::cout << *it << std::endl;
+		lGFile = Gio::File::create_for_path(*it);
+		if (lGFile->query_exists())
+			break;
+	}
+	NrDb* masterDb = new NrDb(lGFile->get_path().c_str());
 	if (!masterDb->List())
 	{
 		delete masterDb;
-		throw Glib::FileError(Glib::FileError::FAILED, "Cannot list master DB");
+		throw Glib::FileError(Glib::FileError::FAILED, "Cannot list master DB: "
+		                  	  + lGFile->get_path());
 	}
 	NrCard* card;
 	while ((card = masterDb->Next()) != 0)

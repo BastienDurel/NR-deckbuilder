@@ -32,3 +32,5 @@ stamp-*
 src/nr_deckbuilder
 *.am.bak
 *.in.bak
+sample/nr-full.db
+sample/nr-full.db.bz2
