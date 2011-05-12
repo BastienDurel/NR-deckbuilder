@@ -105,7 +105,7 @@ bool NrDb::Import(const char* aFile)
 	return false;
 }
 
-static const Glib::ustring SELECT("select card.name, card.cost, group_concat(keyword.keyword, ' - ') keywords, points, text, flavortext, runner, lower(type) ");
+static const Glib::ustring SELECT("select card.name, card.cost, group_concat(keyword.keyword, ' - ') keywords, points, text, flavortext, runner, lower(type), rarity ");
 static const Glib::ustring SELECT_COUNT("select count(1) from card");
 static const Glib::ustring FROM("from card, keyword ");
 static const Glib::ustring WHERE("where card.name = keyword.card ");
@@ -166,7 +166,7 @@ bool NrDb::List(const Glib::ustring& aFilter)
 
 NrCard* NrDb::Next()
 {
-	const int EXPECTED_COLUMNS = 8;
+	const int EXPECTED_COLUMNS = 9;
 	if (!listStmt)
 	{
 		std::cerr << "Statement invalid !" << std::endl;
@@ -238,6 +238,14 @@ NrCard* NrDb::Next()
 		return 0;
 	}
 	theCard->SetType((const char*)ctype);
+	const unsigned char * rarity = sqlite3_column_text(listStmt, 8);
+	if (!rarity)
+	{
+		std::cerr << "Error in SQL (rarity column): " << sqlite3_errmsg(db) << std::endl;
+		delete theCard;
+		return 0;
+	}
+	theCard->SetRarity(*rarity);
 	return theCard;
 }
 
@@ -358,4 +366,38 @@ NrCard& NrDb::Seek(const Glib::ustring& aName)
 		throw Glib::OptionError(Glib::OptionError::BAD_VALUE, "Card " + aName + " not found");
 	else
 		return *lit;
+}
+
+bool NrDb::SaveDeck(const NrCardList& aList, const char* aFile)
+{
+	NrDb tmp(aFile);
+	if (!tmp.db) throw Glib::FileError(Glib::FileError::FAILED, "No DB handle");
+	int err = sqlite3_exec(tmp.db, "CREATE TABLE deck (card varchar(50) not null, count int not null default 1, print int not null default 0)", 0, 0, 0);
+	if (err != SQLITE_OK) throw SQLError("Error in SQL(create)", sqlite3_errmsg(tmp.db));
+	sqlite3_stmt* stmt;
+	Glib::ustring insert = "INSERT INTO deck (card, count, print) values (?, ?, ?)";
+	err = sqlite3_prepare_v2(tmp.db, insert.c_str(), insert.bytes() + 1, &stmt, 0);
+	if (err != SQLITE_OK)
+		throw SQLError("Error in SQL(prepare)", sqlite3_errmsg(tmp.db));
+	for (NrCardList::const_iterator lit = aList.begin(); lit != aList.end(); ++lit)
+	{
+		const Glib::ustring& name = lit->GetName();
+		err = sqlite3_bind_text(stmt, 1, name.c_str(), name.bytes(), SQLITE_STATIC);
+		if (err != SQLITE_OK)
+			throw SQLError("Error in SQL(bind name)", sqlite3_errmsg(tmp.db));
+		err = sqlite3_bind_int(stmt, 2, lit->instanceNum);
+		if (err != SQLITE_OK)
+			throw SQLError("Error in SQL(bind count)", sqlite3_errmsg(tmp.db));
+		err = sqlite3_bind_int(stmt, 3, lit->print);
+		if (err != SQLITE_OK)
+			throw SQLError("Error in SQL(bind print)", sqlite3_errmsg(tmp.db));
+		err = sqlite3_step(stmt);
+		if (err != SQLITE_DONE)
+			throw SQLError("Error in SQL(step)", sqlite3_errmsg(tmp.db));
+		err = sqlite3_reset(stmt);
+		if (err != SQLITE_OK)
+			throw SQLError("Error in SQL(reset)", sqlite3_errmsg(tmp.db));
+	}
+	sqlite3_finalize(stmt);
+	return true;
 }

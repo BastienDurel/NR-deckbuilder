@@ -135,3 +135,27 @@ Glib::ustring NrCard::GetTypeStr() const
 	}
 	return "ERROR";
 }
+
+Glib::ustring NrCard::GetSideStr() const
+{
+	switch (side)
+	{
+		case runner: return "Runner";
+		case corpo: return "Corpo";
+	}
+	return "ERROR";
+}
+
+void NrCard::SetRarity(char aRarityChar)
+{
+	switch (aRarityChar)
+	{
+		case 'R': case 'r': rarety = rare; return;
+		case 'U': case 'u': rarety = uncommon; return;
+		case 'C': case 'c': rarety = common; return;
+		case 'V': case 'v': rarety = vitale; return;
+	}
+	char tmp[] = { '[', aRarityChar, ']', 0 };
+	throw Glib::OptionError(Glib::OptionError::BAD_VALUE, 
+	                        "Invalid rarity: " + Glib::ustring(tmp));
+}

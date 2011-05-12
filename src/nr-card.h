@@ -50,6 +50,7 @@ public:
 	guint GetCost() const { return cost; }
 	gint GetPoints() const { return points; }
 	Side GetSide() const { return side; }
+	Glib::ustring GetSideStr() const;
 	
 	static NrCard* Sample();
 	NrCard(const NrCard&);
@@ -79,6 +80,7 @@ protected:
 	gint points; // means agenda points, ice strenght. -1 for no points.
 
 	void SetType(const Glib::ustring& aStrType);
+	void SetRarity(char aRarityChar);
 	
 private:
 	gchar* base64Buffer;

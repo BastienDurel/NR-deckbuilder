@@ -5,7 +5,8 @@ create table card(
 			 text varchar(1024) not null,
 			 flavortext varchar(1024) null,
 			 points int null,
-			 runner int not null
+			 runner int not null,
+			 rarity char(1) not null default 'C'
 );
 create table keyword(
 			 card varchar(50) references card(name) on delete cascade,

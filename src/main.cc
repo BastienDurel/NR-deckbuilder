@@ -19,6 +19,7 @@
 
 #include <gtkmm.h>
 #include <iostream>
+#include <giomm/file.h>
 
 
 #ifdef ENABLE_NLS
@@ -99,6 +100,13 @@ void NrDeckbuilder::Run()
 	}
 }
 
+void NrDeckbuilder::ErrMsg(const Glib::ustring& msg)
+{
+	std::cerr << msg << std::endl;
+	Gtk::MessageDialog M(msg, false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK, true);
+	M.run();
+}
+
 void NrDeckbuilder::InitActions()
 {
 	Glib::RefPtr<Gtk::Action> a;
@@ -152,6 +160,10 @@ void NrDeckbuilder::InitList(bool aDeck)
 		Glib::RefPtr<Gtk::TreeSelection> refTreeSelection = list->get_selection();
 		refTreeSelection->signal_changed().connect(
 			sigc::bind(sigc::mem_fun(*this, &NrDeckbuilder::onSelect), list));
+
+		list->signal_row_activated().connect(
+		     sigc::bind(sigc::mem_fun(*this, &NrDeckbuilder::onActivate), aDeck, list),
+		     false);
 	}
 }
 
@@ -171,9 +183,12 @@ void NrDeckbuilder::LoadMaster()
 	LoadList(db->FullBegin(), db->FullEnd());
 }
 
+bool IsZero(const NrCard& a) { return a.instanceNum == 0; }
+
 void NrDeckbuilder::RefreshDeck()
 {
-	//currentDeck.insert(currentDeck.end(), db->FullBegin(), db->FullEnd());
+	NrCardList::iterator lit = std::remove_if(currentDeck.begin(), currentDeck.end(), &IsZero);
+	currentDeck.erase(lit, currentDeck.end());
 	LoadList(currentDeck.begin(), currentDeck.end(), true);
 }
 
@@ -217,7 +232,18 @@ void NrDeckbuilder::LoadList(NrCardList::const_iterator lbegin, NrCardList::cons
 
 }
 
-void NrDeckbuilder::onSelect(Gtk::TreeView* aTreeView)
+static void fLoadLabel(Glib::RefPtr<Gtk::Builder> builder, const char* name, 
+                       const Glib::ustring& text)
+{
+	Gtk::Label * l;
+	builder->get_widget(name, l);
+	if (l)
+	{
+		l->set_label(text);
+	}
+}
+
+NrCard& NrDeckbuilder::GetSelectedCard(Gtk::TreeView* aTreeView, bool aInDeck)
 {
 	Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
     aTreeView->get_selection();
@@ -225,17 +251,54 @@ void NrDeckbuilder::onSelect(Gtk::TreeView* aTreeView)
 	if (iter) //If anything is selected
 	{
 		Gtk::TreeModel::Row row = *iter;
-		try
+		if (aInDeck)
 		{
-			NrCard& card = db->Seek(row[MasterColumns.m_col_name]);
-			if (!card.GetImage()) 
-				db->LoadImage(card);
-			LoadImage(card);
+			NrCardList::iterator it = std::find(currentDeck.begin(), currentDeck.end(), row[MasterColumns.m_col_name]);
+			if (it == currentDeck.end())
+				throw Glib::OptionError(Glib::OptionError::BAD_VALUE, row[MasterColumns.m_col_name] + " not found in deck");
+			return *it;
 		}
-		catch (Glib::Exception& ex)
-		{
-			std::cerr << ex.what() << std::endl;
-		}
+		else
+			return db->Seek(row[MasterColumns.m_col_name]);
+	}
+	else
+		throw Glib::OptionError(Glib::OptionError::BAD_VALUE, "Nothing selected in " + aTreeView->get_name());
+}
+
+void NrDeckbuilder::SaveDeck()
+{
+	if (!currentDeckFile) return;
+	if (currentDeckFile->query_exists())
+		currentDeckFile->remove();
+	try
+	{
+		if (!NrDb::SaveDeck(currentDeck, currentDeckFile->get_path().c_str()))
+			ErrMsg("Cannot save deck");
+	}
+	catch (Glib::Exception& ex)
+	{
+		ErrMsg(ex);
+	}
+}
+
+void NrDeckbuilder::onSelect(Gtk::TreeView* aTreeView)
+{
+	try
+	{
+		if (!aTreeView->get_selection()->get_selected())
+			return;
+		NrCard& card = GetSelectedCard(aTreeView);
+		if (!card.GetImage()) 
+			db->LoadImage(card);
+		LoadImage(card);
+		fLoadLabel(builder, "namelabel", card.GetName());
+		fLoadLabel(builder, "typelabel", card.GetTypeStr() + "-" + card.GetKeywords());
+		fLoadLabel(builder, "playerlabel", card.GetSideStr());
+		fLoadLabel(builder, "raritylabel", card.GetRaretyStr());
+	}
+	catch (Glib::Exception& ex)
+	{
+		std::cerr << ex.what() << std::endl;
 	}
 }
 
@@ -266,9 +329,7 @@ void NrDeckbuilder::onOpenClick()
 		try {
 			db->LoadDeck(dialog.get_filename().c_str(), currentDeck);
 		} catch (Glib::Exception& ex) {
-			std::cerr << ex.what() << std::endl;
-			Gtk::MessageDialog msg(ex.what(), false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK, true);
-			msg.run();
+			ErrMsg(ex);
 		}
 	}
 	
@@ -277,14 +338,58 @@ void NrDeckbuilder::onOpenClick()
 
 void NrDeckbuilder::onSaveClick()
 {
+	if (!currentDeckFile) onSaveAsClick();
+	else SaveDeck();
 }
 
 void NrDeckbuilder::onSaveAsClick()
 {
+	Gtk::FileChooserDialog dialog("Please choose a file",
+	                              Gtk::FILE_CHOOSER_ACTION_OPEN);
+	//dialog.set_transient_for(*this);
+	dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+	dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
+
+	Gtk::FileFilter filter_nrdb;
+	filter_nrdb.set_name("Netrunner decks");
+	filter_nrdb.add_pattern("*.nrdb");
+	dialog.add_filter(filter_nrdb);
+
+	int result = dialog.run();
+	if (result == Gtk::RESPONSE_OK)
+		currentDeckFile = Gio::File::create_for_path(dialog.get_filename());
+	else return;
+	if (currentDeckFile->query_exists())
+		; // Overwrite ??
+	SaveDeck();
 }
 
 void NrDeckbuilder::onQuitClick()
 {
 	kit.quit();
+}
+
+void NrDeckbuilder::onActivate(const Gtk::TreePath& p, Gtk::TreeViewColumn* const& c, bool aDeck, Gtk::TreeView* aTreeView)
+{
+	if (!aDeck) try
+	{
+		NrCard& card = GetSelectedCard(aTreeView);
+		NrCardList::iterator it = std::find(currentDeck.begin(), currentDeck.end(), card);
+		if (it == currentDeck.end())
+		{
+			card.instanceNum = 1;
+			currentDeck.push_back(card);
+		}
+		else
+			it->instanceNum += 1;
+
+		RefreshDeck();
+	} catch (...) {}
+	else try
+	{
+		NrCard& card = GetSelectedCard(aTreeView, true);
+		card.instanceNum -= 1;
+		RefreshDeck();
+	} catch (...) {}
 }
 
