@@ -73,6 +73,10 @@ NrDeckbuilder::NrDeckbuilder(Gtk::Main& a) : kit(a), mIsDirty(false)
 	builder->get_widget("main_window", main_win);
 	img = 0;
 	builder->get_widget("image", img);
+	masterModel = Gtk::ListStore::create(MasterColumns);
+    builder->get_widget("mastertreeview", masterList);
+	deckModel = Gtk::ListStore::create(DeckColumns);
+	builder->get_widget("decktreeview", deckList);
 
 	db = NrDb::Master();
 	if (!db)
@@ -226,31 +230,48 @@ void NrDeckbuilder::LoadImage(NrCard& card)
 void NrDeckbuilder::LoadMaster()
 {
 	LoadList(db->FullBegin(), db->FullEnd());
+	Gtk::TreeModel::iterator iter = masterModel->children().begin();
+	if (iter && masterList)
+		masterList->get_selection()->select(iter);
 }
 
 bool IsZero(const NrCard& a) { return a.instanceNum == 0; }
 
 void NrDeckbuilder::RefreshDeck()
 {
+	Glib::ustring selectedName;
+	Glib::RefPtr<Gtk::TreeSelection> refTreeSelection = deckList->get_selection();
+	Gtk::TreeModel::iterator iter = refTreeSelection->get_selected();
+	if (iter) selectedName = (*iter)[MasterColumns.m_col_name];
 	NrCardList::iterator lit = std::remove_if(currentDeck.begin(), currentDeck.end(), &IsZero);
 	currentDeck.erase(lit, currentDeck.end());
+	deckModel->clear();
 	LoadList(currentDeck.begin(), currentDeck.end(), true);
+	if (selectedName.size())
+	{
+		for (iter = deckModel->children().begin(); iter != deckModel->children().end(); ++iter)
+			if ((*iter)[MasterColumns.m_col_name] == selectedName)
+			{
+				deckList->get_selection()->select(iter);
+				break;
+			}
+	}
 }
 
 void NrDeckbuilder::LoadList(NrCardList::const_iterator lbegin, NrCardList::const_iterator lend, bool aDeck)
 {
 	Gtk::TreeView* list = 0;
 	if (aDeck)
-	    builder->get_widget("decktreeview", list);
+	    list = deckList;
     else
-	    builder->get_widget("mastertreeview", list);
+	    list = masterList;
     if (list)
 	{
 		Glib::RefPtr<Gtk::ListStore> refListStore;
 		if (aDeck)
-			refListStore = Gtk::ListStore::create(DeckColumns);
+			refListStore = deckModel;
 		else
-			refListStore = Gtk::ListStore::create(MasterColumns);
+			refListStore = masterModel;
   		Gtk::TreeModel::iterator iter;
   		for (NrCardList::const_iterator citer = lbegin; citer != lend; ++citer) {
     		iter = refListStore->append();
@@ -411,7 +432,14 @@ void NrDeckbuilder::onSaveAsClick()
 
 	int result = dialog.run();
 	if (result == Gtk::RESPONSE_OK)
-		currentDeckFile = Gio::File::create_for_path(dialog.get_filename());
+	{
+		Glib::RefPtr<Gio::File> file = dialog.get_file();
+		std::string filename = file->get_basename();
+		if (filename.find(".nrdb") == std::string::npos)
+			currentDeckFile = Gio::File::create_for_path(file->get_path() + ".nrdb");
+		else
+			currentDeckFile = file;
+	}
 	else return;
 	if (currentDeckFile->query_exists())
 		if (AskForExistingOverwrite() == false)
@@ -442,7 +470,10 @@ void NrDeckbuilder::onTextExportClick()
 	int result = dialog.run();
 	if (result != Gtk::RESPONSE_OK)
 		return;
-	Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(dialog.get_filename());
+	Glib::RefPtr<Gio::File> file = dialog.get_file();
+	std::string filename = file->get_basename();
+	if (filename.find(".txt") == std::string::npos)
+		file = Gio::File::create_for_path(file->get_path() + ".txt");
 	if (file->query_exists())
 	{
 		if (AskForExistingOverwrite() == false)
@@ -486,7 +517,10 @@ void NrDeckbuilder::onPDFExportClick()
 	int result = dialog.run();
 	if (result != Gtk::RESPONSE_OK)
 		return;
-	Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(dialog.get_filename());
+	Glib::RefPtr<Gio::File> file = dialog.get_file();
+	std::string filename = file->get_basename();
+	if (filename.find(".pdf") == std::string::npos)
+		file = Gio::File::create_for_path(file->get_path() + ".pdf");
 	if (file->query_exists())
 	{
 		if (AskForExistingOverwrite() == false)

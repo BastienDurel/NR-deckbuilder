@@ -30,7 +30,7 @@ void ComposePDF(NrCardList& list, Glib::RefPtr<Gtk::PrintOperation> op)
     Glib::RefPtr<Gtk::PageSetup> setup = op->get_default_page_setup();
     if (!setup) setup = Gtk::PageSetup::create ();
     setup->set_orientation(Gtk::PAGE_ORIENTATION_PORTRAIT);
-    setup->set_paper_size_and_default_margins(Gtk::PaperSize("A4"));
+    setup->set_paper_size_and_default_margins(Gtk::PaperSize("iso_a4_210x297mm"));
     op->set_default_page_setup(setup);
     op->set_unit(Gtk::UNIT_MM);
     int rows = printed.size() / 3;

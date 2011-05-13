@@ -251,7 +251,7 @@ NrCard* NrDb::Next()
 
 static void no_op(void*) {}
 
-bool NrDb::LoadImage(class NrCard& aCard)
+bool NrDb::LoadImage(class NrCard& aCard) const
 {
 	Glib::ustring count = "select data from illustration where card = ?";
 	sqlite3_stmt* loadStmt = 0;

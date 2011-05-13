@@ -40,7 +40,7 @@ public:
 
 	const char * LastError() { if (db) return sqlite3_errmsg(db); return "no DB"; }
 
-	bool LoadImage(class NrCard&);
+	bool LoadImage(class NrCard&) const;
 
 	NrCardList& GetFullList() { return fullList; }
 	NrCardList::iterator FullBegin() { return fullList.begin(); }
@@ -48,6 +48,7 @@ public:
 	NrCardList::iterator FullEnd() { return fullList.end(); }
 	NrCardList::const_iterator FullEnd() const { return fullList.end(); }
 	NrCardList GetList(const Glib::ustring& aFilter);
+	NrCard& front() { return fullList.front(); }
 
 	NrCard& Seek(const Glib::ustring& aName);
 

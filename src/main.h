@@ -68,7 +68,12 @@ class NrDeckbuilder
 	NrDb* db;
 
 	CardListColumns MasterColumns;
+	Glib::RefPtr<Gtk::ListStore> masterModel;
+	Gtk::TreeView* masterList;
+	
 	DeckListColumns DeckColumns;
+	Glib::RefPtr<Gtk::ListStore> deckModel;
+	Gtk::TreeView* deckList;
 
 	NrCardList currentDeck;
 	Glib::RefPtr<Gio::File> currentDeckFile;
