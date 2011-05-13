@@ -20,6 +20,7 @@
 #include <gtkmm.h>
 #include <iostream>
 #include <giomm/file.h>
+#include <glibmm/i18n.h>
 
 
 #ifdef ENABLE_NLS
@@ -34,6 +35,7 @@
 /* For testing propose use the local (not installed) ui file */
 /* #define UI_FILE PACKAGE_DATA_DIR"/nr_deckbuilder/ui/nr_deckbuilder.ui" */
 #define UI_FILE "src/nr_deckbuilder.ui"
+#define PACKAGE_LOCALE_DIR "Debug/po"
 
 #include "main.h"
 
@@ -41,6 +43,10 @@ int
 main (int argc, char *argv[])
 {
 	Gtk::Main kit(argc, argv);
+
+	bindtextdomain(GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR);
+	bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
+	textdomain(GETTEXT_PACKAGE);
 	
 	//Load the Glade file and instiate its widgets:	
 	try
@@ -107,6 +113,17 @@ void NrDeckbuilder::ErrMsg(const Glib::ustring& msg)
 	M.run();
 }
 
+bool NrDeckbuilder::AskForExistingOverwrite(const char* secondMsg)
+{
+	Gtk::MessageDialog M(_("File already exists. Overwrite ?"), false,
+	                     Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_NONE, true);
+	//M.add_button("Overwrite", Gtk::RESPONSE_OK);
+	M.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_OK);
+	M.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+	if (secondMsg) M.set_secondary_text(secondMsg);
+	return M.run() == Gtk::RESPONSE_OK;
+}
+
 void NrDeckbuilder::InitActions()
 {
 	Glib::RefPtr<Gtk::Action> a;
@@ -135,6 +152,16 @@ void NrDeckbuilder::InitActions()
 	if (o) a = Glib::RefPtr<Gtk::Action>::cast_dynamic(o); else a.clear();
 	if (a) a->signal_activate().
 		connect(sigc::mem_fun(*this, &NrDeckbuilder::onOpenClick));
+	
+	o = builder->get_object("actionTextExport");
+	if (o) a = Glib::RefPtr<Gtk::Action>::cast_dynamic(o); else a.clear();
+	if (a) a->signal_activate().
+		connect(sigc::mem_fun(*this, &NrDeckbuilder::onTextExportClick));
+	
+	o = builder->get_object("actionPDFExport");
+	if (o) a = Glib::RefPtr<Gtk::Action>::cast_dynamic(o); else a.clear();
+	if (a) a->signal_activate().
+		connect(sigc::mem_fun(*this, &NrDeckbuilder::onPDFExportClick));
 }
 
 void NrDeckbuilder::InitList(bool aDeck)
@@ -146,17 +173,17 @@ void NrDeckbuilder::InitList(bool aDeck)
 	    builder->get_widget("mastertreeview", list);
     if (list)
 	{
-  		list->append_column("Name", MasterColumns.m_col_name);
+  		list->append_column(_("Name"), MasterColumns.m_col_name);
 		if (aDeck)
 		{
-			list->append_column_editable("Count", DeckColumns.m_col_count);
-			list->append_column_editable("Print", DeckColumns.m_col_print);			
+			list->append_column_editable(_("Count"), DeckColumns.m_col_count);
+			list->append_column_editable(_("Print"), DeckColumns.m_col_print);			
 		}
-  		list->append_column("Type", MasterColumns.m_col_type);
-  		list->append_column("Keyw", MasterColumns.m_col_keywords);
-  		list->append_column("Cost", MasterColumns.m_col_cost);
-  		list->append_column("Pt", MasterColumns.m_col_points);
-  		list->append_column("Text", MasterColumns.m_col_text);
+  		list->append_column(_("Type"), MasterColumns.m_col_type);
+  		list->append_column(_("Keyw"), MasterColumns.m_col_keywords);
+  		list->append_column(_("Cost"), MasterColumns.m_col_cost);
+  		list->append_column(_("Pt"), MasterColumns.m_col_points);
+  		list->append_column(_("Text"), MasterColumns.m_col_text);
 		Glib::RefPtr<Gtk::TreeSelection> refTreeSelection = list->get_selection();
 		refTreeSelection->signal_changed().connect(
 			sigc::bind(sigc::mem_fun(*this, &NrDeckbuilder::onSelect), list));
@@ -273,7 +300,7 @@ void NrDeckbuilder::SaveDeck()
 	try
 	{
 		if (!NrDb::SaveDeck(currentDeck, currentDeckFile->get_path().c_str()))
-			ErrMsg("Cannot save deck");
+			ErrMsg(_("Cannot save deck"));
 	}
 	catch (Glib::Exception& ex)
 	{
@@ -311,9 +338,9 @@ void NrDeckbuilder::onNewClick()
 
 void NrDeckbuilder::onOpenClick()
 {
-	Gtk::FileChooserDialog dialog("Please choose a file",
+	Gtk::FileChooserDialog dialog(_("Please choose a file"),
 	                              Gtk::FILE_CHOOSER_ACTION_OPEN);
-	//dialog.set_transient_for(*this);
+	dialog.set_transient_for(*main_win);
 	dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
 	dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
 
@@ -344,9 +371,9 @@ void NrDeckbuilder::onSaveClick()
 
 void NrDeckbuilder::onSaveAsClick()
 {
-	Gtk::FileChooserDialog dialog("Please choose a file",
-	                              Gtk::FILE_CHOOSER_ACTION_OPEN);
-	//dialog.set_transient_for(*this);
+	Gtk::FileChooserDialog dialog(_("Please choose a file"),
+	                              Gtk::FILE_CHOOSER_ACTION_SAVE);
+	dialog.set_transient_for(*main_win);
 	dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
 	dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
 
@@ -360,7 +387,8 @@ void NrDeckbuilder::onSaveAsClick()
 		currentDeckFile = Gio::File::create_for_path(dialog.get_filename());
 	else return;
 	if (currentDeckFile->query_exists())
-		; // Overwrite ??
+		if (AskForExistingOverwrite() == false)
+			return;
 	SaveDeck();
 }
 
@@ -368,6 +396,53 @@ void NrDeckbuilder::onQuitClick()
 {
 	kit.quit();
 }
+
+void NrDeckbuilder::onTextExportClick()
+{
+	Gtk::FileChooserDialog dialog(_("Please choose a file"),
+	                              Gtk::FILE_CHOOSER_ACTION_SAVE);
+	dialog.set_transient_for(*main_win);
+	dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+	dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
+
+	Gtk::FileFilter filter_txt;
+	filter_txt.set_name("Text Files");
+	filter_txt.add_pattern("*.txt");
+	filter_txt.add_mime_type("text/ascii");
+	dialog.add_filter(filter_txt);
+
+	int result = dialog.run();
+	if (result != Gtk::RESPONSE_OK)
+		return;
+	Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(dialog.get_filename());
+	if (currentDeckFile->query_exists())
+		if (AskForExistingOverwrite() == false)
+			return;
+}
+
+void NrDeckbuilder::onPDFExportClick()
+{
+	Gtk::FileChooserDialog dialog(_("Please choose a file"),
+	                              Gtk::FILE_CHOOSER_ACTION_SAVE);
+	dialog.set_transient_for(*main_win);
+	dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+	dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
+
+	Gtk::FileFilter filter_txt;
+	filter_txt.set_name("PDF Files");
+	filter_txt.add_pattern("*.pdf");
+	filter_txt.add_mime_type("application/pdf");
+	dialog.add_filter(filter_txt);
+
+	int result = dialog.run();
+	if (result != Gtk::RESPONSE_OK)
+		return;
+	Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(dialog.get_filename());
+	if (currentDeckFile->query_exists())
+		if (AskForExistingOverwrite() == false)
+			return;
+}
+
 
 void NrDeckbuilder::onActivate(const Gtk::TreePath& p, Gtk::TreeViewColumn* const& c, bool aDeck, Gtk::TreeView* aTreeView)
 {

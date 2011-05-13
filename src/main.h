@@ -98,11 +98,14 @@ class NrDeckbuilder
 		void onSaveClick();
 		void onSaveAsClick();
 		void onQuitClick();
+		void onTextExportClick();
+		void onPDFExportClick();
 
 		void onActivate(const Gtk::TreePath& p, Gtk::TreeViewColumn* const& c, bool aDeck, Gtk::TreeView* aTreeView);
 
 		static void ErrMsg(const Glib::ustring& msg);
 		static void ErrMsg(const Glib::Exception& msg) { ErrMsg(msg.what()); }
+		static bool AskForExistingOverwrite(const char* secondMsg=0);
 
 		
 };

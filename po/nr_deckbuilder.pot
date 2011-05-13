@@ -1,0 +1,61 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: nr_deckbuilder 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-05-13 11:21+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Bastien Durel\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../src/main.cc:113
+msgid "File already exists. Overwrite ?"
+msgstr ""
+
+#: ../src/main.cc:171
+msgid "Name"
+msgstr ""
+
+#: ../src/main.cc:174
+msgid "Count"
+msgstr ""
+
+#: ../src/main.cc:175
+msgid "Print"
+msgstr ""
+
+#: ../src/main.cc:177
+msgid "Type"
+msgstr ""
+
+#: ../src/main.cc:178
+msgid "Keyw"
+msgstr ""
+
+#: ../src/main.cc:179
+msgid "Cost"
+msgstr ""
+
+#: ../src/main.cc:180
+msgid "Pt"
+msgstr ""
+
+#: ../src/main.cc:181
+msgid "Text"
+msgstr ""
+
+#: ../src/main.cc:298
+msgid "Cannot save deck"
+msgstr ""
+
+#: ../src/main.cc:336 ../src/main.cc:369 ../src/main.cc:397 ../src/main.cc:420
+msgid "Please choose a file"
+msgstr ""

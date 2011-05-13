@@ -9,6 +9,7 @@ AM_CPPFLAGS = \
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" \
 	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" \
 	-DPACKAGE_DATA_DIR=\""$(datadir)"\" \
+	-DGETTEXT_PACKAGE=\""$(GETTEXT_PACKAGE)"\" \
 	$(NR_DECKBUILDER_CFLAGS)
 
 AM_CFLAGS =\
