@@ -65,7 +65,7 @@ main (int argc, char *argv[])
 	return 0;
 }
 
-NrDeckbuilder::NrDeckbuilder(Gtk::Main& a) : kit(a)
+NrDeckbuilder::NrDeckbuilder(Gtk::Main& a) : kit(a), mIsDirty(false)
 {
 	//Load the Glade file and instiate its widgets:	
 	builder = Gtk::Builder::create_from_file(UI_FILE);
@@ -77,7 +77,7 @@ NrDeckbuilder::NrDeckbuilder(Gtk::Main& a) : kit(a)
 	db = NrDb::Master();
 	if (!db)
 	{
-		throw Glib::FileError(Glib::FileError::FAILED, "Cannot load Master DB");
+		throw Glib::FileError(Glib::FileError::FAILED, _("Cannot load Master DB"));
 	}
 }
 
@@ -117,11 +117,29 @@ bool NrDeckbuilder::AskForExistingOverwrite(const char* secondMsg)
 {
 	Gtk::MessageDialog M(_("File already exists. Overwrite ?"), false,
 	                     Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_NONE, true);
-	//M.add_button("Overwrite", Gtk::RESPONSE_OK);
 	M.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_OK);
 	M.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
 	if (secondMsg) M.set_secondary_text(secondMsg);
 	return M.run() == Gtk::RESPONSE_OK;
+}
+
+bool NrDeckbuilder::AskForLooseModifications(const char* secondMsg)
+{
+	if (!mIsDirty)
+		return true;
+	Gtk::MessageDialog M(_("Your deck was modified, do you want to save it ?"), false,
+	                     Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_NONE, true);
+	M.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_OK);
+	M.add_button(Gtk::Stock::DISCARD, Gtk::RESPONSE_NO);
+	M.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+	if (secondMsg) M.set_secondary_text(secondMsg);
+	switch (M.run())
+	{
+		case Gtk::RESPONSE_OK: onSaveClick(); return mIsDirty;
+		case Gtk::RESPONSE_NO: return true;
+		case Gtk::RESPONSE_CANCEL: return false;
+	}
+	return false;
 }
 
 void NrDeckbuilder::InitActions()
@@ -301,6 +319,8 @@ void NrDeckbuilder::SaveDeck()
 	{
 		if (!NrDb::SaveDeck(currentDeck, currentDeckFile->get_path().c_str()))
 			ErrMsg(_("Cannot save deck"));
+		else
+			mIsDirty = false;
 	}
 	catch (Glib::Exception& ex)
 	{
@@ -332,12 +352,18 @@ void NrDeckbuilder::onSelect(Gtk::TreeView* aTreeView)
 
 void NrDeckbuilder::onNewClick()
 {
-	currentDeck.clear();
-	RefreshDeck();
+	if (AskForLooseModifications())
+	{
+		currentDeck.clear();
+		RefreshDeck();
+		mIsDirty = false;
+	}
 }
 
 void NrDeckbuilder::onOpenClick()
 {
+	if (!AskForLooseModifications()) return;
+	
 	Gtk::FileChooserDialog dialog(_("Please choose a file"),
 	                              Gtk::FILE_CHOOSER_ACTION_OPEN);
 	dialog.set_transient_for(*main_win);
@@ -361,6 +387,7 @@ void NrDeckbuilder::onOpenClick()
 	}
 	
 	RefreshDeck();
+	mIsDirty = false;
 }
 
 void NrDeckbuilder::onSaveClick()
@@ -394,7 +421,8 @@ void NrDeckbuilder::onSaveAsClick()
 
 void NrDeckbuilder::onQuitClick()
 {
-	kit.quit();
+	if (AskForLooseModifications())
+		kit.quit();
 }
 
 void NrDeckbuilder::onTextExportClick()
@@ -415,9 +443,30 @@ void NrDeckbuilder::onTextExportClick()
 	if (result != Gtk::RESPONSE_OK)
 		return;
 	Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(dialog.get_filename());
-	if (currentDeckFile->query_exists())
+	if (file->query_exists())
+	{
 		if (AskForExistingOverwrite() == false)
 			return;
+		else
+			file->remove();
+	}
+
+	Glib::RefPtr<Gio::FileOutputStream> lOut;
+	try 
+	{
+		lOut = file->create_file(Gio::FILE_CREATE_REPLACE_DESTINATION);
+		lOut->write(_("Number\tCard Name\tPrint\n"));
+		for (NrCardList::iterator it = currentDeck.begin();
+		     it != currentDeck.end(); ++it)
+		{
+			lOut->write(Glib::ustring::compose("%1\t%2\t%3\n", it->instanceNum,
+			                                   it->GetName(), it->print ? "*" : ""));
+		}
+	}
+	catch (const Glib::Exception& ex) 
+	{
+		ErrMsg(ex);
+	}
 }
 
 void NrDeckbuilder::onPDFExportClick()
@@ -438,9 +487,21 @@ void NrDeckbuilder::onPDFExportClick()
 	if (result != Gtk::RESPONSE_OK)
 		return;
 	Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(dialog.get_filename());
-	if (currentDeckFile->query_exists())
+	if (file->query_exists())
+	{
 		if (AskForExistingOverwrite() == false)
 			return;
+		else
+			file->remove();
+	}
+	try
+	{
+		WritePDF(currentDeck, file);
+	}
+	catch (const Glib::Exception& ex) 
+	{
+		ErrMsg(ex);
+	}
 }
 
 

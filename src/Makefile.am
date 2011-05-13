@@ -27,7 +27,8 @@ nr_deckbuilder_SOURCES = \
 	nr-card.h       \
 	main.h       \
 	s-q-l-error.h       \
-	s-q-l-error.cc
+	s-q-l-error.cc       \
+	pdf.cc
 
 nr_deckbuilder_LDFLAGS = 
 

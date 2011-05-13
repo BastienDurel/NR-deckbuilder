@@ -72,6 +72,8 @@ class NrDeckbuilder
 
 	NrCardList currentDeck;
 	Glib::RefPtr<Gio::File> currentDeckFile;
+
+	bool mIsDirty;
 	
 	public:
 		NrDeckbuilder(Gtk::Main&);
@@ -106,10 +108,12 @@ class NrDeckbuilder
 		static void ErrMsg(const Glib::ustring& msg);
 		static void ErrMsg(const Glib::Exception& msg) { ErrMsg(msg.what()); }
 		static bool AskForExistingOverwrite(const char* secondMsg=0);
+		bool AskForLooseModifications(const char* secondMsg=0);
 
 		
 };
 
+extern bool WritePDF(NrCardList& list, Glib::RefPtr<Gio::File> file);
 
 #endif
 
