@@ -6,56 +6,89 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: nr_deckbuilder 0.1\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-05-13 11:21+0200\n"
+"POT-Creation-Date: 2011-05-13 11:49+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: Bastien Durel\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../src/main.cc:113
+#: ../src/main.cc:118
 msgid "File already exists. Overwrite ?"
 msgstr ""
 
-#: ../src/main.cc:171
+#: ../src/main.cc:176 ../src/nr_deckbuilder.ui.h:4
 msgid "Name"
 msgstr ""
 
-#: ../src/main.cc:174
+#: ../src/main.cc:179
 msgid "Count"
 msgstr ""
 
-#: ../src/main.cc:175
+#: ../src/main.cc:180
 msgid "Print"
 msgstr ""
 
-#: ../src/main.cc:177
+#: ../src/main.cc:182 ../src/nr_deckbuilder.ui.h:8
 msgid "Type"
 msgstr ""
 
-#: ../src/main.cc:178
+#: ../src/main.cc:183
 msgid "Keyw"
 msgstr ""
 
-#: ../src/main.cc:179
+#: ../src/main.cc:184
 msgid "Cost"
 msgstr ""
 
-#: ../src/main.cc:180
+#: ../src/main.cc:185
 msgid "Pt"
 msgstr ""
 
-#: ../src/main.cc:181
+#: ../src/main.cc:186
 msgid "Text"
 msgstr ""
 
-#: ../src/main.cc:298
+#: ../src/main.cc:303
 msgid "Cannot save deck"
 msgstr ""
 
-#: ../src/main.cc:336 ../src/main.cc:369 ../src/main.cc:397 ../src/main.cc:420
+#: ../src/main.cc:341 ../src/main.cc:374 ../src/main.cc:402 ../src/main.cc:425
 msgid "Please choose a file"
+msgstr ""
+
+#: ../src/nr_deckbuilder.ui.h:1
+msgid "Aid_e"
+msgstr ""
+
+#: ../src/nr_deckbuilder.ui.h:2
+msgid "Export as _PDF"
+msgstr ""
+
+#: ../src/nr_deckbuilder.ui.h:3
+msgid "Export as _Text"
+msgstr ""
+
+#: ../src/nr_deckbuilder.ui.h:5
+msgid "Netrunner Deck builder"
+msgstr ""
+
+#: ../src/nr_deckbuilder.ui.h:6
+msgid "Player"
+msgstr ""
+
+#: ../src/nr_deckbuilder.ui.h:7
+msgid "Rarity"
+msgstr ""
+
+#: ../src/nr_deckbuilder.ui.h:9
+msgid "_Exporter"
+msgstr ""
+
+#: ../src/nr_deckbuilder.ui.h:10
+msgid "_Fichier"
 msgstr ""

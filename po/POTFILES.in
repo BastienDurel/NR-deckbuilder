@@ -1,4 +1,4 @@
 # List of source files containing translatable strings.
 
 src/main.cc
-src/nr_deckbuilder.ui
+[type: gettext/glade]src/nr_deckbuilder.ui

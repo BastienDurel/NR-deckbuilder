@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Nr-deckbuilder 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-05-13 11:21+0200\n"
+"POT-Creation-Date: 2011-05-13 11:49+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Bastien Durel\n"
 "Language: \n"
@@ -16,46 +16,78 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../src/main.cc:113
+#: ../src/main.cc:118
 msgid "File already exists. Overwrite ?"
 msgstr "Le fichier sélectionné existe déjà. L'écraser ?"
 
-#: ../src/main.cc:171
+#: ../src/main.cc:176 ../src/nr_deckbuilder.ui.h:4
 msgid "Name"
 msgstr "Nom"
 
-#: ../src/main.cc:174
+#: ../src/main.cc:179
 msgid "Count"
 msgstr "Nb"
 
-#: ../src/main.cc:175
+#: ../src/main.cc:180
 msgid "Print"
 msgstr "Imprimer"
 
-#: ../src/main.cc:177
+#: ../src/main.cc:182 ../src/nr_deckbuilder.ui.h:8
 msgid "Type"
 msgstr "Type"
 
-#: ../src/main.cc:178
+#: ../src/main.cc:183
 msgid "Keyw"
 msgstr "Clés"
 
-#: ../src/main.cc:179
+#: ../src/main.cc:184
 msgid "Cost"
 msgstr "Coût"
 
-#: ../src/main.cc:180
+#: ../src/main.cc:185
 msgid "Pt"
 msgstr "Pts"
 
-#: ../src/main.cc:181
+#: ../src/main.cc:186
 msgid "Text"
 msgstr "Texte"
 
-#: ../src/main.cc:298
+#: ../src/main.cc:303
 msgid "Cannot save deck"
 msgstr "Impossible d'enregistrer le deck"
 
-#: ../src/main.cc:336 ../src/main.cc:369 ../src/main.cc:397 ../src/main.cc:420
+#: ../src/main.cc:341 ../src/main.cc:374 ../src/main.cc:402 ../src/main.cc:425
 msgid "Please choose a file"
 msgstr "Choisissez un fichier"
+
+#: ../src/nr_deckbuilder.ui.h:1
+msgid "Aid_e"
+msgstr "Aid_e"
+
+#: ../src/nr_deckbuilder.ui.h:2
+msgid "Export as _PDF"
+msgstr "Exporter en _PDF"
+
+#: ../src/nr_deckbuilder.ui.h:3
+msgid "Export as _Text"
+msgstr "Exporter sous forme _Texte"
+
+#: ../src/nr_deckbuilder.ui.h:5
+msgid "Netrunner Deck builder"
+msgstr "Netrunner Deck builder"
+
+#: ../src/nr_deckbuilder.ui.h:6
+msgid "Player"
+msgstr "Joueur"
+
+#: ../src/nr_deckbuilder.ui.h:7
+msgid "Rarity"
+msgstr "Rareté"
+
+#: ../src/nr_deckbuilder.ui.h:9
+msgid "_Exporter"
+msgstr "_Exporter"
+
+#: ../src/nr_deckbuilder.ui.h:10
+msgid "_Fichier"
+msgstr "_Fichier"
