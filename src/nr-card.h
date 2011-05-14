@@ -38,7 +38,6 @@ public:
 	
 	const Glib::ustring& GetName() const { return name; }
 	const Glib::ustring& GetKeywords() const { return keywords; }
-	//const std::set<Glib::ustring>& GetKeywords() const { return keywords; }
 	const Glib::ustring& GetText() const { return gameText; }
 	const Glib::ustring& GetRulingText() const { return rulingText; }
 	const Glib::ustring& GetFlavorText() const { return flavorText; }

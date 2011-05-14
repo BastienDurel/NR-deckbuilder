@@ -24,7 +24,8 @@
 #include <unistd.h>
 #include <iostream>
 
-NrCard::NrCard() : base64Buffer(0), points(-1), cost(0), instanceNum(0), type(other)
+NrCard::NrCard() : base64Buffer(0), points(-1), cost(0), instanceNum(0), 
+					print(false), type(other)
 {
 }
 

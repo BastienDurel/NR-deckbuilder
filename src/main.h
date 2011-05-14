@@ -98,6 +98,8 @@ class NrDeckbuilder
 		void LoadMaster();
 		void LoadList(NrCardList::const_iterator lbegin, NrCardList::const_iterator lend, bool aDeck=false);
 
+		void changeNum(Gtk::TreeModel::iterator& iter, gint num);
+
 		void onSelect(Gtk::TreeView* aTreeView);
 
 		void onNewClick();
@@ -107,6 +109,9 @@ class NrDeckbuilder
 		void onQuitClick();
 		void onTextExportClick();
 		void onPDFExportClick();
+
+		void onNumClick(const Glib::ustring &, const Glib::ustring&);
+		void onPrintClick(const Glib::ustring &);
 
 		void onActivate(const Gtk::TreePath& p, Gtk::TreeViewColumn* const& c, bool aDeck, Gtk::TreeView* aTreeView);
 

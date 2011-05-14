@@ -198,8 +198,20 @@ void NrDeckbuilder::InitList(bool aDeck)
   		list->append_column(_("Name"), MasterColumns.m_col_name);
 		if (aDeck)
 		{
-			list->append_column_editable(_("Count"), DeckColumns.m_col_count);
-			list->append_column_editable(_("Print"), DeckColumns.m_col_print);			
+			Gtk::CellRenderer* pCol = 0;
+			Gtk::CellRendererText* pRenderer = 0;
+			Gtk::CellRendererToggle* pRenderer2 = 0;
+			int count  = 0;
+			count = list->append_column_editable(_("Count"), DeckColumns.m_col_count);
+			pCol = list->get_column_cell_renderer(count - 1);
+			pRenderer = dynamic_cast<Gtk::CellRendererText*>(pCol);
+			if (pRenderer)
+				pRenderer->signal_edited().connect(sigc::mem_fun(*this, &NrDeckbuilder::onNumClick));
+			count = list->append_column_editable(_("Print"), DeckColumns.m_col_print);
+			pCol = list->get_column_cell_renderer(count - 1);
+			pRenderer2 = dynamic_cast<Gtk::CellRendererToggle*>(pCol);
+			if (pRenderer2)
+				pRenderer2->signal_toggled().connect(sigc::mem_fun(*this, &NrDeckbuilder::onPrintClick));
 		}
   		list->append_column(_("Type"), MasterColumns.m_col_type);
   		list->append_column(_("Keyw"), MasterColumns.m_col_keywords);
@@ -321,14 +333,18 @@ NrCard& NrDeckbuilder::GetSelectedCard(Gtk::TreeView* aTreeView, bool aInDeck)
 		{
 			NrCardList::iterator it = std::find(currentDeck.begin(), currentDeck.end(), row[MasterColumns.m_col_name]);
 			if (it == currentDeck.end())
-				throw Glib::OptionError(Glib::OptionError::BAD_VALUE, row[MasterColumns.m_col_name] + " not found in deck");
+				throw Glib::OptionError(Glib::OptionError::BAD_VALUE, 
+			                    		Glib::ustring::compose(_("%1  not found in deck"), 
+			                                           			row[MasterColumns.m_col_name]));
 			return *it;
 		}
 		else
 			return db->Seek(row[MasterColumns.m_col_name]);
 	}
 	else
-		throw Glib::OptionError(Glib::OptionError::BAD_VALUE, "Nothing selected in " + aTreeView->get_name());
+		throw Glib::OptionError(Glib::OptionError::BAD_VALUE, 
+		                        Glib::ustring::compose(_("Nothing selected in %1"), 
+		                                               aTreeView->get_name()));
 }
 
 void NrDeckbuilder::SaveDeck()
@@ -538,8 +554,7 @@ void NrDeckbuilder::onPDFExportClick()
 	}
 }
 
-
-void NrDeckbuilder::onActivate(const Gtk::TreePath& p, Gtk::TreeViewColumn* const& c, bool aDeck, Gtk::TreeView* aTreeView)
+void NrDeckbuilder::onActivate(const Gtk::TreePath& aPath, Gtk::TreeViewColumn* const& c, bool aDeck, Gtk::TreeView* aTreeView)
 {
 	if (!aDeck) try
 	{
@@ -549,17 +564,73 @@ void NrDeckbuilder::onActivate(const Gtk::TreePath& p, Gtk::TreeViewColumn* cons
 		{
 			card.instanceNum = 1;
 			currentDeck.push_back(card);
+			RefreshDeck();
 		}
 		else
+		{
 			it->instanceNum += 1;
-
-		RefreshDeck();
+			RefreshDeck(); // Here we can do better with changeNum()
+		}
 	} catch (...) {}
 	else try
 	{
 		NrCard& card = GetSelectedCard(aTreeView, true);
 		card.instanceNum -= 1;
-		RefreshDeck();
+		//RefreshDeck();
+		Gtk::TreeModel::iterator iter = deckModel->get_iter(aPath);
+		changeNum(iter, card.instanceNum);
 	} catch (...) {}
 }
 
+void NrDeckbuilder::changeNum(Gtk::TreeModel::iterator& iter, gint num)
+{
+	if (iter) try
+	{
+		Gtk::TreeModel::Row row = *iter;
+		NrCardList::iterator it = std::find(currentDeck.begin(), currentDeck.end(), row[MasterColumns.m_col_name]);
+		if (it == currentDeck.end())
+			throw Glib::OptionError(Glib::OptionError::BAD_VALUE, 
+			                        Glib::ustring::compose(_("%1  not found in deck"), 
+			                                               row[MasterColumns.m_col_name]));
+		it->instanceNum = num;
+		if (!it->instanceNum)
+		{
+			currentDeck.erase(it);
+			deckModel->erase(iter);
+		}
+		else
+			row[DeckColumns.m_col_count] = it->instanceNum;
+	}
+	catch (const Glib::Exception& ex) 
+	{
+		ErrMsg(ex);
+	}
+}
+
+void NrDeckbuilder::onNumClick(const Glib::ustring &aPath, const Glib::ustring& aText)
+{
+	std::cout << "onNumClick(" << aPath << ", " << aText << ")" << std::endl;
+	Gtk::TreeModel::iterator iter = deckModel->get_iter(aPath);
+	changeNum(iter, atoi(aText.raw().c_str()));
+}
+
+void NrDeckbuilder::onPrintClick(const Glib::ustring &aPath)
+{
+	std::cout << "onPrintClick(" << aPath << ")" << std::endl;
+	Gtk::TreeModel::iterator iter = deckModel->get_iter(aPath);
+	if (iter) try
+	{
+		Gtk::TreeModel::Row row = *iter;
+		NrCardList::iterator it = std::find(currentDeck.begin(), currentDeck.end(), row[MasterColumns.m_col_name]);
+		if (it == currentDeck.end())
+			throw Glib::OptionError(Glib::OptionError::BAD_VALUE, 
+			                        Glib::ustring::compose(_("%1  not found in deck"), 
+			                                               row[MasterColumns.m_col_name]));
+		it->print = !it->print;
+		row[DeckColumns.m_col_print] = it->print;
+	}
+	catch (const Glib::Exception& ex) 
+	{
+		ErrMsg(ex);
+	}
+}
