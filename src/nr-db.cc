@@ -57,6 +57,9 @@ NrDb* NrDb::Master()
 	fileToSeek.push_back(Glib::build_filename(Glib::get_home_dir(), 
 	                     Glib::build_filename(".NR-deckbuilder", 
 	                                          "master.db")));
+	fileToSeek.push_back(Glib::build_filename(
+	                     Glib::build_filename(PACKAGE_DATA_DIR, "NR-deckbuilder"),
+	                                          "master.db"));
 	fileToSeek.push_back(Glib::build_filename(cur, "master.db"));
 	fileToSeek.push_back(Glib::build_filename(cur, 
 							Glib::build_filename("sample", "master.db")));
@@ -339,10 +342,13 @@ NrCardList& NrDb::LoadDeck(const char* aFile, NrCardList& aList) throw (Glib::Ex
 		const unsigned char * card = sqlite3_column_text(stmt, 0);
 		if (!card)
 			throw SQLError("Error in SQL (name column): ", sqlite3_errmsg(tmp.db));
-		NrCard refCard = Seek((const char*)card);
-		refCard.instanceNum = sqlite3_column_int(stmt, 1);
-		refCard.print = sqlite3_column_int(stmt, 2);
-		aList.push_back(refCard);
+		NrCard& refCard = Seek((const char*)card);
+		if (!refCard.GetImage())
+			LoadImage(refCard); // Load image if not loaded
+		NrCard deckCard = refCard;
+		deckCard.instanceNum = sqlite3_column_int(stmt, 1);
+		deckCard.print = sqlite3_column_int(stmt, 2);
+		aList.push_back(deckCard);
 	} 
 	if (err != SQLITE_DONE)
 		throw SQLError("Error in SQL(step)", sqlite3_errmsg(tmp.db));

@@ -569,7 +569,7 @@ void NrDeckbuilder::onActivate(const Gtk::TreePath& aPath, Gtk::TreeViewColumn* 
 		else
 		{
 			it->instanceNum += 1;
-			RefreshDeck(); // Here we can do better with changeNum()
+			RefreshDeck(); // TODO: Here we can do better with changeNum()
 		}
 	} catch (...) {}
 	else try
