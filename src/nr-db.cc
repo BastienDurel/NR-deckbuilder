@@ -17,6 +17,10 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if defined WIN32
+#include "stdafx.h"
+#endif
+
 #include "nr-db.h"
 #include <stdexcept>
 #include <iostream>
@@ -63,6 +67,11 @@ NrDb* NrDb::Master()
 	fileToSeek.push_back(Glib::build_filename(cur, "master.db"));
 	fileToSeek.push_back(Glib::build_filename(cur, 
 							Glib::build_filename("sample", "master.db")));
+#if defined WIN32
+	fileToSeek.push_back(Glib::build_filename(cur, 
+							Glib::build_filename(
+							Glib::build_filename("..", "share"), "master.db")));
+#endif
 	fileToSeek.push_back(Glib::build_filename(cur, 
 							Glib::build_filename("sample", "nr-full.db")));
 	fileToSeek.push_back(Glib::build_filename(cur, 

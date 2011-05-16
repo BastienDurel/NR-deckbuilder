@@ -15,6 +15,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+#if defined WIN32
+#include "stdafx.h"
+#endif
+
 #include <algorithm>
 #include <iostream>
 #include <gtkmm.h>
@@ -83,10 +87,10 @@ void PrintProxiesOperation::print_message(const Glib::RefPtr<Gtk::PrintContext>&
 
 void PrintProxiesOperation::on_draw_page(const Glib::RefPtr<Gtk::PrintContext>& context, int page_nr)
 {
-    int start = page_nr * 9;
+    unsigned int start = page_nr * 9;
     if (start >= printed.size())
         return;
-    int end = std::min(start + 8, (int)printed.size() - 1);
+    unsigned int end = std::min(start + 8, printed.size() - 1);
 
     Cairo::RefPtr<Cairo::Context> cairo_ctx = context->get_cairo_context();
     cairo_ctx->set_source_rgb(0, 0, 0);
@@ -97,7 +101,7 @@ void PrintProxiesOperation::on_draw_page(const Glib::RefPtr<Gtk::PrintContext>& 
                                                  page_nr + 1, get_n_pages_to_print());
     print_message(context, title, PAGE_MARGIN, 200, PAGE_MARGIN, TITLE_MARGIN, 
                   Pango::ALIGN_CENTER);
-    for (int cur = start; cur <= end; ++cur)
+    for (unsigned int cur = start; cur <= end; ++cur)
     {
         NrCard& card = printed[cur];
         
@@ -163,4 +167,5 @@ bool WritePDF(NrCardList& list, Glib::RefPtr<Gio::File> file)
     ComposePDF(list, op);
     op->set_export_filename(file->get_path());
     Gtk::PrintOperationResult res = op->run(Gtk::PRINT_OPERATION_ACTION_EXPORT);
+	return true;
 }

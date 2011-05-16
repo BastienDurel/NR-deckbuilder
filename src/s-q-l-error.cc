@@ -17,6 +17,10 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if defined WIN32
+#include "stdafx.h"
+#endif
+
 #include "s-q-l-error.h"
 
 Glib::ustring SQLError::sep = ": ";
