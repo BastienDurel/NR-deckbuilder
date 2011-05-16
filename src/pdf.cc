@@ -27,12 +27,11 @@
 #include "nr-card.h"
 #include "nr-db.h"
 
-static const double PIXEL_BY_MM = 72 / 25.4;
-static const double CARD_WIDTH = 60 * PIXEL_BY_MM;
-static const double CARD_HEIGHT = 85 * PIXEL_BY_MM;
-static const double CARD_MARGIN = 4 * PIXEL_BY_MM;
-static const double PAGE_MARGIN = 5 * PIXEL_BY_MM;
-static const double TITLE_MARGIN = 15 * PIXEL_BY_MM;
+static const double CARD_WIDTH = 60;
+static const double CARD_HEIGHT = 85;
+static const double CARD_MARGIN = 4;
+static const double PAGE_MARGIN = 5;
+static const double TITLE_MARGIN = 15;
 
 class PrintProxiesOperation : public Gtk::PrintOperation
 {
@@ -151,8 +150,11 @@ void ComposePDF(NrCardList& list, Glib::RefPtr<PrintProxiesOperation> op)
     setup->set_orientation(Gtk::PAGE_ORIENTATION_PORTRAIT);
     setup->set_paper_size_and_default_margins(Gtk::PaperSize("iso_a4_210x297mm"));
     op->set_default_page_setup(setup);
-    //op->set_unit(Gtk::UNIT_MM);
-    op->set_unit(Gtk::UNIT_PIXEL);
+    op->set_unit(Gtk::UNIT_MM);
+    Glib::RefPtr<Gtk::PrintSettings> settings = op->get_print_settings();
+    if (!settings) settings = Gtk::PrintSettings::create();
+    settings->set_quality(Gtk::PRINT_QUALITY_HIGH);
+    op->set_print_settings(settings);
     int rows = printed.size() / 3;
     if (printed.size() % 3)
         ++rows;
