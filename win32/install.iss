@@ -100,13 +100,16 @@ Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Fil
 Filename: "{app}\bin\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, "&", "&&")}}"; Flags: nowait postinstall skipifsilent
 
 [Code]
-var
- HasDownload: Boolean;
+var   
+ HasDownloadMaster: Boolean;
+ HasDownloadRedist: Boolean;
 
 procedure InitializeWizard();
 begin
  ITD_init;
- ITD_DownloadAfter(wpReady);
+ ITD_DownloadAfter(wpReady);    
+ HasDownloadMaster := False;
+ HasDownloadRedist := False;
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
@@ -114,11 +117,11 @@ var
   ResultCode: Integer ;
 begin
  if CurStep = ssPostInstall then begin
-  if HasDownload = True then begin //Lets install those files that were downloaded for us 
+  if HasDownloadMaster = True then begin
    filecopy(expandconstant('{app}\share\master.db'),expandconstant('{app}\share\master.db.dist'),false);
    filecopy(expandconstant('{tmp}\master.db'),expandconstant('{app}\share\master.db'),false);
   end;
-  if IsComponentSelected('redist') then begin
+  if HasDownloadRedist = True then begin
    Exec(expandconstant('{tmp}\vcredist_x86.exe'), '', '', SW_SHOW, ewWaitUntilTerminated, ResultCode);
   end;
  end;
@@ -128,11 +131,14 @@ function NextButtonClick(curPageID:integer):boolean;
 begin
  if curPageID = wpSelectTasks then begin
   if IsTaskSelected('download') then begin
-   HasDownload := True; 
+   HasDownloadMaster := True; 
    itd_addfile('http://corrin.geekwu.org/~bastien/NR/nr-full.db',expandconstant('{tmp}\master.db'));
   end; 
+ end; 
+ if curPageID = wpSelectComponents then begin
   if IsComponentSelected('redist') then begin 
-   itd_addfile('http://corrin.geekwu.org/~bastien/NR/',expandconstant('{tmp}\vcredist_x86.exe'));
+   HasDownloadRedist := True;
+   itd_addfile('http://corrin.geekwu.org/~bastien/NR/vcredist_x86.exe',expandconstant('{tmp}\vcredist_x86.exe'));
   end; 
  end; 
  result := True;
