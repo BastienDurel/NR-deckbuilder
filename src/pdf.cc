@@ -23,11 +23,12 @@
 #include "nr-card.h"
 #include "nr-db.h"
 
-static const int CARD_WIDTH = 60;
-static const int CARD_HEIGHT = 85;
-static const int CARD_MARGIN = 4;
-static const int PAGE_MARGIN = 5;
-static const int TITLE_MARGIN = 15;
+static const double PIXEL_BY_MM = 72 / 25.4;
+static const double CARD_WIDTH = 60 * PIXEL_BY_MM;
+static const double CARD_HEIGHT = 85 * PIXEL_BY_MM;
+static const double CARD_MARGIN = 4 * PIXEL_BY_MM;
+static const double PAGE_MARGIN = 5 * PIXEL_BY_MM;
+static const double TITLE_MARGIN = 15 * PIXEL_BY_MM;
 
 class PrintProxiesOperation : public Gtk::PrintOperation
 {
@@ -40,7 +41,7 @@ class PrintProxiesOperation : public Gtk::PrintOperation
         void set_name(const Glib::ustring& a) { name = a; }
 
     protected:
-        PrintProxiesOperation() {}
+        PrintProxiesOperation() { std::cerr << "SCALE: " << Pango::SCALE << std::endl; }
 
         //PrintOperation default signal handler overrides:
         //virtual void on_begin_print(const Glib::RefPtr<Gtk::PrintContext>& context);
@@ -100,9 +101,9 @@ void PrintProxiesOperation::on_draw_page(const Glib::RefPtr<Gtk::PrintContext>& 
     {
         NrCard& card = printed[cur];
         
-        int x0 = curcol * (CARD_WIDTH + CARD_MARGIN) + PAGE_MARGIN;
+        int x0 = curcol * (CARD_WIDTH + CARD_MARGIN);
         int x1 = x0 + CARD_WIDTH;
-        int y0 = currow * (CARD_HEIGHT + CARD_MARGIN) + PAGE_MARGIN + TITLE_MARGIN;
+        int y0 = currow * (CARD_HEIGHT + CARD_MARGIN) + CARD_MARGIN + TITLE_MARGIN;
         int y1 = y0 + CARD_HEIGHT;
         
         if (!card.GetImage())
@@ -112,9 +113,14 @@ void PrintProxiesOperation::on_draw_page(const Glib::RefPtr<Gtk::PrintContext>& 
         }
         else
         {
+            const Glib::RefPtr<Gdk::Pixbuf> img = card.GetImage();
+            std::cerr << "width: " << img->get_width() << " height: " << img->get_height();
             // TODO: resize !!
-            Gdk::Cairo::set_source_pixbuf(cairo_ctx, card.GetImage(), x0, y0);
+            //cairo_ctx->rectangle(x0, y0, CARD_WIDTH, CARD_HEIGHT);
+            //cairo_ctx->clip();
+            Gdk::Cairo::set_source_pixbuf(cairo_ctx, img, x0, y0);
             cairo_ctx->paint();
+            std::cerr << "paint(" << x0 << ", " << y0 << ") !" << std::endl;
         }
         
         if (++curcol > 2)
@@ -131,13 +137,15 @@ void ComposePDF(NrCardList& list, Glib::RefPtr<PrintProxiesOperation> op)
     for (NrCardList::iterator it = list.begin(); it != list.end(); ++it)
         if (it->print)
             printed.insert(printed.end(), it->instanceNum, *it);
+    std::cerr << "to print: " << printed.size() << std::endl;
     op->set_printed(printed);
     Glib::RefPtr<Gtk::PageSetup> setup = op->get_default_page_setup();
     if (!setup) setup = Gtk::PageSetup::create ();
     setup->set_orientation(Gtk::PAGE_ORIENTATION_PORTRAIT);
     setup->set_paper_size_and_default_margins(Gtk::PaperSize("iso_a4_210x297mm"));
     op->set_default_page_setup(setup);
-    op->set_unit(Gtk::UNIT_MM);
+    //op->set_unit(Gtk::UNIT_MM);
+    op->set_unit(Gtk::UNIT_PIXEL);
     int rows = printed.size() / 3;
     if (printed.size() % 3)
         ++rows;

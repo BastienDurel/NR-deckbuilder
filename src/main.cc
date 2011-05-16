@@ -106,6 +106,15 @@ void NrDeckbuilder::Run()
 		
 		LoadMaster();
 		RefreshDeck();
+
+#if 1 // debug
+		try {
+			db->LoadDeck("test.nrdb", currentDeck);
+			RefreshDeck();
+			WritePDF(currentDeck, Gio::File::create_for_path("test.pdf"));
+		} catch (const Glib::Exception& ex) { std::cerr << ex.what() << std::endl; }
+#endif
+		
 		kit.run(*main_win);
 	}
 }
