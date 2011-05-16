@@ -90,11 +90,12 @@ void PrintProxiesOperation::on_draw_page(const Glib::RefPtr<Gtk::PrintContext>& 
     unsigned int start = page_nr * 9;
     if (start >= printed.size())
         return;
-    unsigned int end = std::min(start + 8, printed.size() - 1);
+    unsigned int end = std::min(start + 8, (unsigned int)printed.size() - 1);
 
     Cairo::RefPtr<Cairo::Context> cairo_ctx = context->get_cairo_context();
     cairo_ctx->set_source_rgb(0, 0, 0);
-    
+
+    double f_scale = 0;
     int curcol = 0;
     int currow = 0;
     Glib::ustring title = Glib::ustring::compose("%1 - Page %2/%3", name, 
@@ -106,23 +107,25 @@ void PrintProxiesOperation::on_draw_page(const Glib::RefPtr<Gtk::PrintContext>& 
         NrCard& card = printed[cur];
         
         int x0 = curcol * (CARD_WIDTH + CARD_MARGIN);
-        int x1 = x0 + CARD_WIDTH;
         int y0 = currow * (CARD_HEIGHT + CARD_MARGIN) + CARD_MARGIN + TITLE_MARGIN;
-        int y1 = y0 + CARD_HEIGHT;
         
         if (!card.GetImage())
         {
             std::cerr << "No image for " << card.GetName() << " !!" << std::endl;
-            print_message(context, "[" + card.GetName() + "]", x0, x1, y0, y1);
+            print_message(context, "[" + card.GetName() + "]", x0, x0 + CARD_WIDTH, y0, y0 + CARD_HEIGHT);
         }
         else
         {
             const Glib::RefPtr<Gdk::Pixbuf> img = card.GetImage();
             std::cerr << "width: " << img->get_width() << " height: " << img->get_height();
-            // TODO: resize !!
-            //cairo_ctx->rectangle(x0, y0, CARD_WIDTH, CARD_HEIGHT);
-            //cairo_ctx->clip();
-            Gdk::Cairo::set_source_pixbuf(cairo_ctx, img, x0, y0);
+            if (f_scale == 0)
+            {
+              double required_size = CARD_WIDTH;
+              double img_size = img->get_width();
+              f_scale = required_size / img_size;
+              cairo_ctx->scale (f_scale, f_scale);
+            }
+            Gdk::Cairo::set_source_pixbuf(cairo_ctx, img, x0 / f_scale, y0 / f_scale);
             cairo_ctx->paint();
             std::cerr << "paint(" << x0 << ", " << y0 << ") !" << std::endl;
         }
