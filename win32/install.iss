@@ -52,8 +52,13 @@ Source: "{#GtkmmBase}\bin\glademm-vc100-2_4.dll"; DestDir: "{app}\bin"; Componen
 Source: "{#GtkmmBase}\bin\glibmm-vc100-2_4.dll"; DestDir: "{app}\bin"; Components: gtkmm
 Source: "{#GtkmmBase}\bin\gtkmm-vc100-2_4.dll"; DestDir: "{app}\bin"; Components: gtkmm
 Source: "{#GtkmmBase}\bin\sigc-vc100-2_0.dll"; DestDir: "{app}\bin"; Components: gtkmm
-Source: "{#GtkmmBase}\bin\xml++-vc100-2_6.dll"; DestDir: "{app}\bin"; Components: gtkmm    
+Source: "{#GtkmmBase}\bin\xml++-vc100-2_6.dll"; DestDir: "{app}\bin"; Components: gtkmm   
+Source: "{#GtkmmBase}\bin\atkmm-vc100-1_6.dll"; DestDir: "{app}\bin"; Components: gtkmm   
+Source: "{#GtkmmBase}\bin\cairomm-vc100-1_0.dll"; DestDir: "{app}\bin"; Components: gtkmm   
+Source: "{#GtkmmBase}\bin\pangomm-vc100-1_4.dll"; DestDir: "{app}\bin"; Components: gtkmm    
 Source: "{#GtkmmBase}\redist\intl.dll"; DestDir: "{app}\bin"; Components: gtk
+Source: "{#GtkmmBase}\redist\freetype6.dll"; DestDir: "{app}\bin"; Components: gtk    
+Source: "{#GtkmmBase}\redist\zlib1.dll"; DestDir: "{app}\bin"; Components: gtk
 Source: "{#GtkmmBase}\redist\libgtk-win32-2.0-0.dll"; DestDir: "{app}\bin"; Components: gtk
 Source: "{#GtkmmBase}\redist\libgdk-win32-2.0-0.dll"; DestDir: "{app}\bin"; Components: gtk
 Source: "{#GtkmmBase}\redist\libgdk_pixbuf-2.0-0.dll"; DestDir: "{app}\bin"; Components: gtk
@@ -69,13 +74,21 @@ Source: "{#GtkmmBase}\redist\libgobject-2.0-0.dll"; DestDir: "{app}\bin"; Compon
 Source: "{#GtkmmBase}\redist\libgthread-2.0-0.dll"; DestDir: "{app}\bin"; Components: gtk
 Source: "{#GtkmmBase}\redist\libglib-2.0-0.dll"; DestDir: "{app}\bin"; Components: gtk
 Source: "{#GtkmmBase}\redist\libexpat-1.dll"; DestDir: "{app}\bin"; Components: gtk
-Source: "{#GtkmmBase}\redist\libfontconfig-1.dll"; DestDir: "{app}\bin"; Components: gtk
-Source: "{#GtkmmBase}\redist\libpng14-14.dll"; DestDir: "{app}\bin"; Components: gtk
+Source: "{#GtkmmBase}\redist\libfontconfig-1.dll"; DestDir: "{app}\bin"; Components: gtk  
+Source: "{#GtkmmBase}\redist\libpng14-14.dll"; DestDir: "{app}\bin"; Components: gtk   
+Source: "{#GtkmmBase}\etc\pango\*"; DestDir: "{app}\etc\pango"; Components: gtk
+Source: "{#GtkmmBase}\etc\gtk-2.0\*"; DestDir: "{app}\etc\gtk-2.0"; Components: gtk
+Source: "{#GtkmmBase}\share\themes\MS-Windows\gtk-2.0\*"; DestDir: "{app}\share\themes\MS-Windows\gtk-2.0"; Components: gtk
+Source: "{#GtkmmBase}\lib\gtk-2.0\2.10.0\engines\*"; DestDir: "{app}\lib\gtk-2.0\2.10.0\engines"; Components: gtk
+Source: "{#GtkmmBase}\share\locale\*"; DestDir: "{app}\share\locale"; Components: gtk; Flags: recursesubdirs
+
+;Source: "{#SourcesBase}\win32\vcredist_x86.exe"; DestDir: "{tmp}"; Components: redist
 
 [Components]
 Name: "main"; Description: "Main Files"; Types: full compact custom; Flags: fixed 
 Name: "gtkmm"; Description: "GTKmm Files"; Types: full compact custom;
 Name: "gtk"; Description: "GTK+ Files"; Types: full compact custom;
+Name: "redist"; Description: "VC 2010 Redistribuable files"; Types: full compact custom;
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\bin\{#MyAppExeName}"
@@ -97,11 +110,16 @@ begin
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
+var
+  ResultCode: Integer ;
 begin
  if CurStep = ssPostInstall then begin
   if HasDownload = True then begin //Lets install those files that were downloaded for us 
    filecopy(expandconstant('{app}\share\master.db'),expandconstant('{app}\share\master.db.dist'),false);
    filecopy(expandconstant('{tmp}\master.db'),expandconstant('{app}\share\master.db'),false);
+  end;
+  if IsComponentSelected('redist') then begin
+   Exec(expandconstant('{tmp}\vcredist_x86.exe'), '', '', SW_SHOW, ewWaitUntilTerminated, ResultCode);
   end;
  end;
 end;
@@ -111,8 +129,11 @@ begin
  if curPageID = wpSelectTasks then begin
   if IsTaskSelected('download') then begin
    HasDownload := True; 
-   itd_addfile('http://corrin.geekwu.org/~bastien/nr-full.db',expandconstant('{tmp}\master.db'));
-  end;
+   itd_addfile('http://corrin.geekwu.org/~bastien/NR/nr-full.db',expandconstant('{tmp}\master.db'));
+  end; 
+  if IsComponentSelected('redist') then begin 
+   itd_addfile('http://corrin.geekwu.org/~bastien/NR/',expandconstant('{tmp}\vcredist_x86.exe'));
+  end; 
  end; 
  result := True;
 end;
