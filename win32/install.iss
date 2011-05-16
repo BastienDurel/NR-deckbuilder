@@ -52,7 +52,8 @@ Source: "{#GtkmmBase}\bin\glademm-vc100-2_4.dll"; DestDir: "{app}\bin"; Componen
 Source: "{#GtkmmBase}\bin\glibmm-vc100-2_4.dll"; DestDir: "{app}\bin"; Components: gtkmm
 Source: "{#GtkmmBase}\bin\gtkmm-vc100-2_4.dll"; DestDir: "{app}\bin"; Components: gtkmm
 Source: "{#GtkmmBase}\bin\sigc-vc100-2_0.dll"; DestDir: "{app}\bin"; Components: gtkmm
-Source: "{#GtkmmBase}\bin\xml++-vc100-2_6.dll"; DestDir: "{app}\bin"; Components: gtkmm
+Source: "{#GtkmmBase}\bin\xml++-vc100-2_6.dll"; DestDir: "{app}\bin"; Components: gtkmm    
+Source: "{#GtkmmBase}\redist\intl.dll"; DestDir: "{app}\bin"; Components: gtk
 Source: "{#GtkmmBase}\redist\libgtk-win32-2.0-0.dll"; DestDir: "{app}\bin"; Components: gtk
 Source: "{#GtkmmBase}\redist\libgdk-win32-2.0-0.dll"; DestDir: "{app}\bin"; Components: gtk
 Source: "{#GtkmmBase}\redist\libgdk_pixbuf-2.0-0.dll"; DestDir: "{app}\bin"; Components: gtk
