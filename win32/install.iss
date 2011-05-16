@@ -10,6 +10,8 @@
 #define SourcesBase "C:\perso\NR-deckbuilder"
 #define GtkmmBase "C:\gtkmm"
 
+#include "it_download.iss"
+
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
@@ -37,6 +39,7 @@ Name: "french"; MessagesFile: "compiler:Languages\French.isl"
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
+Name: "download"; Description: "Download base master set"
 
 [Files]
 Source: "{#SourcesBase}\src\nr_deckbuilder.ui"; DestDir: "{app}\src"; Flags: ignoreversion
@@ -82,3 +85,42 @@ Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Fil
 [Run]
 Filename: "{app}\bin\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, "&", "&&")}}"; Flags: nowait postinstall skipifsilent
 
+[Code]
+var
+ HasDownload: Boolean;
+
+procedure InitializeWizard();
+begin
+ ITD_init;
+ ITD_DownloadAfter(wpReady);
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+ if CurStep = ssPostInstall then begin
+  if HasDownload = True then begin //Lets install those files that were downloaded for us 
+   filecopy(expandconstant('{app}\share\master.db'),expandconstant('{app}\share\master.db.dist'),false);
+   filecopy(expandconstant('{tmp}\master.db'),expandconstant('{app}\share\master.db'),false);
+  end;
+ end;
+end;
+
+function NextButtonClick(curPageID:integer):boolean;
+begin
+ if curPageID = wpSelectTasks then begin
+  if IsTaskSelected('download') then begin
+   HasDownload := True; 
+   itd_addfile('http://corrin.geekwu.org/~bastien/nr-full.db',expandconstant('{tmp}\master.db'));
+  end;
+ end; 
+ result := True;
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep = usUninstall then begin
+    if FileExists(expandconstant('{app}\share\master.db.dist')) then begin
+      DeleteFile(expandconstant('{app}\share\master.db.dist'));
+    end;
+  end;
+end;
