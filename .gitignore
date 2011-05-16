@@ -34,3 +34,5 @@ src/nr_deckbuilder
 *.in.bak
 sample/nr-full.db
 sample/nr-full.db.bz2
+NR-deckbuilder.sdf
+/win32/Release

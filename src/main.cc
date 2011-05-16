@@ -17,6 +17,10 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if defined WIN32
+#include "stdafx.h"
+#endif
+
 #include <gtkmm.h>
 #include <iostream>
 #include <giomm/file.h>
@@ -34,7 +38,9 @@
 
 /* For testing propose use the local (not installed) ui file */
 /* #define UI_FILE PACKAGE_DATA_DIR"/nr_deckbuilder/ui/nr_deckbuilder.ui" */
+#if !defined UI_FILE
 #define UI_FILE "src/nr_deckbuilder.ui"
+#endif
 #define PACKAGE_LOCALE_DIR "Debug/po"
 
 #include "main.h"
@@ -634,3 +640,12 @@ void NrDeckbuilder::onPrintClick(const Glib::ustring &aPath)
 		ErrMsg(ex);
 	}
 }
+
+#if defined WIN32 && defined NDEBUG
+#include <windows.h>
+int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+{
+	char * argv[] = { "nr_deckbuilder.exe" };
+	return main(1, argv);
+}
+#endif
