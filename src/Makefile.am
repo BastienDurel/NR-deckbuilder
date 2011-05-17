@@ -30,9 +30,9 @@ nr_deckbuilder_SOURCES = \
 	s-q-l-error.cc       \
 	pdf.cc
 
-nr_deckbuilder_LDFLAGS = 
+nr_deckbuilder_LDFLAGS = $(HPDF_LIBS_PATH)
 
-nr_deckbuilder_LDADD = $(NR_DECKBUILDER_LIBS)
+nr_deckbuilder_LDADD = $(NR_DECKBUILDER_LIBS) $(HPDF_LIBS)
 
 EXTRA_DIST = $(ui_DATA)
 

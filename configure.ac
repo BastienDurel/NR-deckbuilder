@@ -17,15 +17,16 @@ dnl   [HPDF_LIBS='-lhpdf'])
 dnl AC_SUBST([HPDF_LIBS])
 dnl AC_CHECK_LIB([hpdf], [HPDF_NewDoc], [], [AC_MSG_ERROR(Can't find libhpdf)])
 
-
-
 AC_ARG_WITH(hpdf,
-[  --with-hpdf=PATH     Look for hpdf in PATH/{lib,include}.],
-    if test "x$withval" != "xyes"; then
+[AS_HELP_STRING([--with-hpdf=PATH],[Look for hpdf in PATH.])],
+    [
+		with_hpdf=$withval
+		if test "x$withval" != "xyes"; then
       hpdfpathset=1
-      with_hpdf=check
-dnl      AC_ADD_SEARCH_PATH($withval)
-    fi
+      LIBS="-L$withval $LIBS"
+			AC_SUBST([HPDF_LIBS_PATH], ["$withval"])
+    fi],
+		[with_hpdf=check]
 )
 AC_ARG_ENABLE(hpdf,,
         AC_MSG_ERROR([ Invalid option. Use --with-hpdf/--without-hpdf instead ]) )
