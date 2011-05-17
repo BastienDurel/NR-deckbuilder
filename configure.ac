@@ -24,7 +24,7 @@ AC_ARG_WITH(hpdf,
     if test "x$withval" != "xyes"; then
       hpdfpathset=1
       with_hpdf=check
-      AC_ADD_SEARCH_PATH($withval)
+dnl      AC_ADD_SEARCH_PATH($withval)
     fi
 )
 AC_ARG_ENABLE(hpdf,,
