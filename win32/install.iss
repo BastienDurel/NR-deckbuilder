@@ -44,7 +44,7 @@ Name: "download"; Description: "Download base master set"
 [Files]
 Source: "{#SourcesBase}\src\nr_deckbuilder.ui"; DestDir: "{app}\src"; Flags: ignoreversion
 Source: "{#SourcesBase}\win32\Release\NR-deckbuilder.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "{#SourcesBase}\sample\test.db"; DestDir: "{app}\share"; DestName: "master.db"; Flags: ignoreversion
+Source: "{#SourcesBase}\sample\test.db"; DestDir: "{app}\share"; DestName: "master.db"; Flags: onlyifdoesntexist
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files  
 Source: "{#GtkmmBase}\bin\gdkmm-vc100-2_4.dll"; DestDir: "{app}\bin"; Components: gtkmm    
 Source: "{#GtkmmBase}\bin\giomm-vc100-2_4.dll"; DestDir: "{app}\bin"; Components: gtkmm
