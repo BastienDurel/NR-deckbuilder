@@ -19,6 +19,8 @@
 
 #if defined WIN32
 #include "stdafx.h"
+#else
+#include "config.h"
 #endif
 
 #include "nr-db.h"

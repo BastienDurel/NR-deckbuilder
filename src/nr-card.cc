@@ -21,6 +21,7 @@
 #include "stdafx.h"
 #else
 #include <unistd.h>
+#include "config.h"
 #endif
 
 #include "nr-card.h"
@@ -47,6 +48,7 @@ NrCard::NrCard(const NrCard& a) : base64Buffer(0)
 	type = a.type;
 	cost = a.cost;
 	points = a.points;
+	side = a.side;
 
 	instanceNum = a.instanceNum;
 	print = a.print;
@@ -120,6 +122,7 @@ void NrCard::SetType(const Glib::ustring& aStrType)
 	if (aStrType == "program") { type = program; return; }
 	if (aStrType == "prep") { type = prep; return; }
 	if (aStrType == "ressource") { type = ressource; return; }
+	if (aStrType == "resource") { type = ressource; return; }
 	if (aStrType == "hardware") { type = hardware; return; }
 	if (aStrType == "other") { type = other; return; }
 }
