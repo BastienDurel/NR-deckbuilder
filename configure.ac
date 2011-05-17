@@ -17,6 +17,28 @@ dnl   [HPDF_LIBS='-lhpdf'])
 dnl AC_SUBST([HPDF_LIBS])
 dnl AC_CHECK_LIB([hpdf], [HPDF_NewDoc], [], [AC_MSG_ERROR(Can't find libhpdf)])
 
+
+
+AC_ARG_WITH(hpdf,
+[  --with-hpdf=PATH     Look for hpdf in PATH/{lib,include}.],
+    if test "x$withval" != "xyes"; then
+      hpdfpathset=1
+      with_hpdf=check
+      AC_ADD_SEARCH_PATH($withval)
+    fi
+)
+AC_ARG_ENABLE(hpdf,,
+        AC_MSG_ERROR([ Invalid option. Use --with-hpdf/--without-hpdf instead ]) )
+
+HPDF_LIBS=
+AS_IF([test "x$with_hpdf" != xno],
+  [AC_CHECK_LIB([hpdf], [HPDF_NewDoc],
+     [AC_SUBST([HPDF_LIBS], ["-lhpdf"])
+  AC_DEFINE([HAVE_HPDF], [1], [Define if you have hpdf])],
+    [if test "x$with_hpdf" != xcheck; then
+       AC_MSG_FAILURE([--with-hpdf was given, but test for hpdf failed])
+      fi], [])])
+
 dnl ***************************************************************************
 dnl Internatinalization
 dnl ***************************************************************************
