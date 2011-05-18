@@ -280,9 +280,14 @@ class HPDF
             gchar* buffer = 0;
             gsize buffer_size = 0;
             img->save_to_buffer(buffer, buffer_size, "jpeg");
+#if defined HAVE_HPDF_22
+            HPDF_Image himg = HPDF_LoadJpegImageFromMem(pdf, reinterpret_cast<HPDF_BYTE*>(buffer), buffer_size);
+#else
             HPDF_Stream simg = HPDF_MemStream_New(pdf->mmgr, buffer_size);
             HPDF_Stream_Write(simg, reinterpret_cast<HPDF_BYTE*>(buffer), buffer_size);
             HPDF_Image himg = HPDF_Image_LoadJpegImage(pdf->mmgr, simg, pdf->xref);
+            HPDF_Stream_Free (simg);
+#endif
 
             /* temporary switch to X dpi mode, multiply coords by (X/72) */
             HPDF_Page_GSave(page);
@@ -294,8 +299,7 @@ class HPDF
             HPDF_Page_DrawImage(page, himg, x, y, w, h);
             HPDF_Page_GRestore(page);
 
-            HPDF_Stream_Free (simg);
-            //g_free(buffer);
+            g_free(buffer);
             
         }
 

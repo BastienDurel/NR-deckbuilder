@@ -39,6 +39,8 @@ AS_IF([test "x$with_hpdf" != xno],
     [if test "x$with_hpdf" != xcheck; then
        AC_MSG_FAILURE([--with-hpdf was given, but test for hpdf failed])
       fi], [])])
+      
+AC_CHECK_LIB([hpdf], [HPDF_LoadJpegImageFromMem],[AC_DEFINE([HAVE_HPDF_22], [1],[Have hpdf 2.2+])])
 
 dnl ***************************************************************************
 dnl Internatinalization
