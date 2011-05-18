@@ -42,22 +42,14 @@
 #define LOGN(x) std::cerr << x
 #endif
 
-#if defined HAVE_HPDF
-static const double CARD_WIDTH = 60 * 72 / 25.4;
-static const double CARD_HEIGHT = 85 * 72 / 25.4;
-static const double CARD_MARGIN = 4 * 72 / 25.4;
-static const double PAGE_MARGIN = 6 * 72 / 25.4;
-static const double TITLE_MARGIN = 15 * 72 / 25.4;
-#else
-static const double CARD_WIDTH = 60;
-static const double CARD_HEIGHT = 85;
-static const double CARD_MARGIN = 4;
-static const double PAGE_MARGIN = 5;
-static const double TITLE_MARGIN = 15;
-#endif
-
 class PrintProxiesOperation : public Gtk::PrintOperation
 {
+    static const double CARD_WIDTH = 60;
+    static const double CARD_HEIGHT = 85;
+    static const double CARD_MARGIN = 4;
+    static const double PAGE_MARGIN = 5;
+    static const double TITLE_MARGIN = 15;    
+    
     public:
         static Glib::RefPtr<PrintProxiesOperation> create()
         { return Glib::RefPtr<PrintProxiesOperation>(new PrintProxiesOperation()); }
@@ -190,9 +182,16 @@ class HPDF
     HPDF_Page page;
     HPDF_REAL height;
     HPDF_REAL width;
-    HPDF_Font def_font;
+    HPDF_Font def_font;  
 
     public:
+        // 300 dpi = 300 / 25.4 dpmm
+        static const double CARD_WIDTH = 60 * 300 / 25.4;
+        static const double CARD_HEIGHT = 85 * 300 / 25.4;
+        static const double CARD_MARGIN = 4 * 300 / 25.4;
+        static const double PAGE_MARGIN = 6 * 300 / 25.4;
+        static const double TITLE_MARGIN = 15 * 300 / 25.4;  
+        
         typedef enum { left, center, right } Align;
         
         HPDF() : page(0) {
@@ -216,10 +215,11 @@ class HPDF
 
         void AddPage() {
             page = HPDF_AddPage(pdf);
-            HPDF_Page_SetSize (page, HPDF_PAGE_SIZE_A4, HPDF_PAGE_PORTRAIT);     
-            height = HPDF_Page_GetHeight (page);
-            width = HPDF_Page_GetWidth (page);
-            HPDF_Page_SetFontAndSize (page, def_font, 8);
+            HPDF_Page_SetSize (page, HPDF_PAGE_SIZE_A4, HPDF_PAGE_PORTRAIT);   
+            HPDF_Page_Concat (page, 72.0f / 300.0f, 0, 0, 72.0f / 300.0f, 0, 0);  
+            height = HPDF_Page_GetHeight (page) * (300.0 / 72.0);
+            width = HPDF_Page_GetWidth (page) * (300.0 / 72.0);
+            HPDF_Page_SetFontAndSize (page, def_font, 30);
             LOG("height: " << height << " - width: " << width);
         }
 
@@ -269,6 +269,21 @@ class HPDF
         }
 
         void WriteImage(const Glib::RefPtr<Gdk::Pixbuf>& img, double x0, double y0, double x1, double y1) {
+            double x = std::min(x0, x1);
+            double w = std::abs(x1 - x0);
+            double y = std::min(height - y0, height - y1);
+            double h = std::abs(y1 - y0);
+            gchar* buffer = 0;
+            gsize buffer_size = 0;
+            img->save_to_buffer(buffer, buffer_size, "jpeg");
+            HPDF_Stream simg = HPDF_MemStream_New(pdf->mmgr, buffer_size);
+            HPDF_Stream_Write(simg, reinterpret_cast<HPDF_BYTE*>(buffer), buffer_size);
+            HPDF_Image himg = HPDF_Image_LoadJpegImage(pdf->mmgr, simg, pdf->xref);
+
+            HPDF_Page_DrawImage (page, himg, x, y, w, h);
+
+            HPDF_Stream_Free (simg);
+            
         }
 
         class Exception : public Glib::Exception {
@@ -304,19 +319,20 @@ void ComposePDF(NrCardList& list, HPDF& pdf, const Glib::ustring& name)
                 currow = 0;
                 ++curpage;
                 pdf.AddPage();
-                Glib::ustring title = Glib::ustring::compose(_("%1 - Page %1"), name, curpage);
-                pdf.WriteText(title, 0, 0, -1, TITLE_MARGIN, HPDF::center, 12);
+                Glib::ustring title = Glib::ustring::compose(_("%1 - Page %2"), name, curpage);
+                pdf.WriteText(title, 0, 0, -1, HPDF::TITLE_MARGIN, HPDF::center, 12);
             }
         }
-        int x0 = curcol * (CARD_WIDTH + CARD_MARGIN) + PAGE_MARGIN;
-        int y0 = currow * (CARD_HEIGHT + CARD_MARGIN) + CARD_MARGIN + TITLE_MARGIN + PAGE_MARGIN;
+        int x0 = curcol * (HPDF::CARD_WIDTH + HPDF::CARD_MARGIN) + HPDF::PAGE_MARGIN;
+        int y0 = currow * (HPDF::CARD_HEIGHT + HPDF::CARD_MARGIN) + HPDF::CARD_MARGIN + HPDF::TITLE_MARGIN + HPDF::PAGE_MARGIN;
         Glib::RefPtr<Gdk::Pixbuf> img = it->GetImage();
-        if (img && false) {
+        if (img) {
+            pdf.WriteImage(img, x0, y0, x0 + HPDF::CARD_WIDTH, y0 + HPDF::CARD_HEIGHT);
         }
         else {
             Glib::ustring card = Glib::ustring::compose("[%1]", it->GetName());
-            pdf.WriteText(card, x0, y0, x0 + CARD_WIDTH, y0 + TITLE_MARGIN, HPDF::center);
-            pdf.WriteRect(x0, y0, x0 + CARD_WIDTH, y0 + CARD_HEIGHT);
+            pdf.WriteText(card, x0, y0, x0 + HPDF::CARD_WIDTH, y0 + HPDF::TITLE_MARGIN, HPDF::center);
+            pdf.WriteRect(x0, y0, x0 + HPDF::CARD_WIDTH, y0 + HPDF::CARD_HEIGHT);
         }
     }
 }
