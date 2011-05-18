@@ -226,6 +226,7 @@ class HPDF
         void WriteText(const Glib::ustring& m, double x0, double y0, double x1=-1, double y1=-1, Align al=left, int size=8) {
             if (!page) return;
             std::string raw = m.raw(); // TODO: translitterate ?
+            // cf. GCharsetConverter (not in c++)
             LOG("raw: " << raw);
             HPDF_Page_SetFontAndSize (page, def_font, size);
             HPDF_REAL tw = HPDF_Page_TextWidth (page, raw.c_str());
