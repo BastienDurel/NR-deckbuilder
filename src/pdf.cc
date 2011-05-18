@@ -185,12 +185,16 @@ class HPDF
     HPDF_Font def_font;  
 
     public:
-        // 300 dpi = 300 / 25.4 dpmm
-        static const double CARD_WIDTH = 60 * 300 / 25.4;
-        static const double CARD_HEIGHT = 85 * 300 / 25.4;
-        static const double CARD_MARGIN = 4 * 300 / 25.4;
-        static const double PAGE_MARGIN = 6 * 300 / 25.4;
-        static const double TITLE_MARGIN = 15 * 300 / 25.4;  
+        // 72 dpi = 72 / 25.4 dpmm
+        static const double CARD_WIDTH = 60 * 72 / 25.4;
+        static const double CARD_HEIGHT = 85 * 72 / 25.4;
+        static const double CARD_MARGIN = 4 * 72 / 25.4;
+        static const double PAGE_MARGIN = 6 * 72 / 25.4;
+        static const double TITLE_MARGIN = 15 * 72 / 25.4;  
+
+        // Desirable resolution for images
+        static const double IMG_RESOLUTION = 160; /* 515 pixel for 85 mm */
+        
         
         typedef enum { left, center, right } Align;
         
@@ -215,16 +219,14 @@ class HPDF
 
         void AddPage() {
             page = HPDF_AddPage(pdf);
-            HPDF_Page_SetSize (page, HPDF_PAGE_SIZE_A4, HPDF_PAGE_PORTRAIT);   
-            HPDF_Page_Concat (page, 72.0f / 300.0f, 0, 0, 72.0f / 300.0f, 0, 0);  
-            height = HPDF_Page_GetHeight (page) * (300.0 / 72.0);
-            width = HPDF_Page_GetWidth (page) * (300.0 / 72.0);
+            HPDF_Page_SetSize (page, HPDF_PAGE_SIZE_A4, HPDF_PAGE_PORTRAIT);
+            height = HPDF_Page_GetHeight (page);
+            width = HPDF_Page_GetWidth (page);
             HPDF_Page_SetFontAndSize (page, def_font, 30);
             LOG("height: " << height << " - width: " << width);
         }
 
         void WriteText(const Glib::ustring& m, double x0, double y0, double x1=-1, double y1=-1, Align al=left, int size=8) {
-            if (!page) return;
             std::string raw = m.raw(); // TODO: translitterate ?
             // cf. GCharsetConverter (not in c++)
             LOG("raw: " << raw);
@@ -273,6 +275,8 @@ class HPDF
             double w = std::abs(x1 - x0);
             double y = std::min(height - y0, height - y1);
             double h = std::abs(y1 - y0);
+
+            /* extract buffer from pixbuf, uses low-level HPDF streams to load it */
             gchar* buffer = 0;
             gsize buffer_size = 0;
             img->save_to_buffer(buffer, buffer_size, "jpeg");
@@ -280,9 +284,18 @@ class HPDF
             HPDF_Stream_Write(simg, reinterpret_cast<HPDF_BYTE*>(buffer), buffer_size);
             HPDF_Image himg = HPDF_Image_LoadJpegImage(pdf->mmgr, simg, pdf->xref);
 
-            HPDF_Page_DrawImage (page, himg, x, y, w, h);
+            /* temporary switch to X dpi mode, multiply coords by (X/72) */
+            HPDF_Page_GSave(page);
+            x *= IMG_RESOLUTION / 72.0;
+            w *= IMG_RESOLUTION / 72.0;
+            y *= IMG_RESOLUTION / 72.0;
+            h *= IMG_RESOLUTION / 72.0;
+            HPDF_Page_Concat(page, 72.0f / IMG_RESOLUTION, 0, 0, 72.0f / IMG_RESOLUTION, 0, 0);  
+            HPDF_Page_DrawImage(page, himg, x, y, w, h);
+            HPDF_Page_GRestore(page);
 
             HPDF_Stream_Free (simg);
+            //g_free(buffer);
             
         }
 
