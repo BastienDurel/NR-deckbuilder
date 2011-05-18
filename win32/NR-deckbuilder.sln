@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual C++ Express 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NR-deckbuilder", "NR-deckbuilder.vcxproj", "{F78931CE-F8C2-4048-A7F5-352592F1A4BE}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "winharu", "..\..\hpdf\libharu-2.2.1\winharu\winharu.vcxproj", "{660B20E8-FD51-4387-9D31-A35621CCBD38}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -13,6 +15,10 @@ Global
 		{F78931CE-F8C2-4048-A7F5-352592F1A4BE}.Debug|Win32.Build.0 = Debug|Win32
 		{F78931CE-F8C2-4048-A7F5-352592F1A4BE}.Release|Win32.ActiveCfg = Release|Win32
 		{F78931CE-F8C2-4048-A7F5-352592F1A4BE}.Release|Win32.Build.0 = Release|Win32
+		{660B20E8-FD51-4387-9D31-A35621CCBD38}.Debug|Win32.ActiveCfg = Debug|Win32
+		{660B20E8-FD51-4387-9D31-A35621CCBD38}.Debug|Win32.Build.0 = Debug|Win32
+		{660B20E8-FD51-4387-9D31-A35621CCBD38}.Release|Win32.ActiveCfg = Release|Win32
+		{660B20E8-FD51-4387-9D31-A35621CCBD38}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -52,6 +52,10 @@ main (int argc, char *argv[])
 {
 	Gtk::Main kit(argc, argv);
 
+#if defined WIN32
+	std::locale::global(std::locale(""));
+#endif
+
 	bindtextdomain(GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR);
 	bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 	textdomain(GETTEXT_PACKAGE);

@@ -21,3 +21,4 @@
 #define GETTEXT_PACKAGE "nr_deckbuilder"
 
 #define ENABLE_NLS
+#define HAVE_HPDF

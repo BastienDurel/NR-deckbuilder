@@ -22,7 +22,6 @@
 #endif
 
 #if defined HAVE_HPDF
-#include <hpdf_types.h>
 #include <hpdf.h>
 #endif
 
@@ -41,14 +40,14 @@
 #define LOG(x) std::cerr << x << std::endl
 #define LOGN(x) std::cerr << x
 #endif
-
+ 
 class PrintProxiesOperation : public Gtk::PrintOperation
 {
-    static const double CARD_WIDTH = 60;
-    static const double CARD_HEIGHT = 85;
-    static const double CARD_MARGIN = 4;
-    static const double PAGE_MARGIN = 5;
-    static const double TITLE_MARGIN = 15;    
+    static const double CARD_WIDTH;
+    static const double CARD_HEIGHT;
+    static const double CARD_MARGIN;
+    static const double PAGE_MARGIN;
+    static const double TITLE_MARGIN;  
     
     public:
         static Glib::RefPtr<PrintProxiesOperation> create()
@@ -74,6 +73,11 @@ class PrintProxiesOperation : public Gtk::PrintOperation
         NrCardList printed;
         Glib::ustring name;
 };
+const double PrintProxiesOperation::CARD_WIDTH = 60;
+const double PrintProxiesOperation::CARD_HEIGHT = 85;
+const double PrintProxiesOperation::CARD_MARGIN = 4;
+const double PrintProxiesOperation::PAGE_MARGIN = 5;
+const double PrintProxiesOperation::TITLE_MARGIN = 15; 
 
 void PrintProxiesOperation::print_message(const Glib::RefPtr<Gtk::PrintContext>& context, 
                                           const Glib::ustring& aMsg, 
@@ -186,14 +190,14 @@ class HPDF
 
     public:
         // 72 dpi = 72 / 25.4 dpmm
-        static const double CARD_WIDTH = 60 * 72 / 25.4;
-        static const double CARD_HEIGHT = 85 * 72 / 25.4;
-        static const double CARD_MARGIN = 4 * 72 / 25.4;
-        static const double PAGE_MARGIN = 6 * 72 / 25.4;
-        static const double TITLE_MARGIN = 15 * 72 / 25.4;  
+        static const double CARD_WIDTH;
+        static const double CARD_HEIGHT;
+        static const double CARD_MARGIN;
+        static const double PAGE_MARGIN;
+        static const double TITLE_MARGIN;  
 
         // Desirable resolution for images
-        static const double IMG_RESOLUTION = 160; /* 515 pixel for 85 mm */
+        static const double IMG_RESOLUTION;
         
         
         typedef enum { left, center, right } Align;
@@ -322,6 +326,14 @@ class HPDF
         
 };
 
+
+const double HPDF::CARD_WIDTH = 60 * 72 / 25.4;
+const double HPDF::CARD_HEIGHT = 85 * 72 / 25.4;
+const double HPDF::CARD_MARGIN = 4 * 72 / 25.4;
+const double HPDF::PAGE_MARGIN = 6 * 72 / 25.4;
+const double HPDF::TITLE_MARGIN = 15 * 72 / 25.4;
+const double HPDF::IMG_RESOLUTION = 160; /* 515 pixel for 85 mm */
+
 void ComposePDF(NrCardList& list, HPDF& pdf, const Glib::ustring& name)
 {
     int curcol = 2;
@@ -336,7 +348,11 @@ void ComposePDF(NrCardList& list, HPDF& pdf, const Glib::ustring& name)
                 currow = 0;
                 ++curpage;
                 pdf.AddPage();
+#if defined WIN32
+				Glib::ustring title = name;
+#else
                 Glib::ustring title = Glib::ustring::compose(_("%1 - Page %2"), name, curpage);
+#endif
                 pdf.WriteText(title, 0, 0, -1, HPDF::TITLE_MARGIN, HPDF::center, 12);
             }
         }
