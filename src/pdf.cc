@@ -348,8 +348,10 @@ void ComposePDF(NrCardList& list, HPDF& pdf, const Glib::ustring& name)
                 currow = 0;
                 ++curpage;
                 pdf.AddPage();
-#if defined WIN32
-				Glib::ustring title = name;
+#if defined WIN32_COMPOSE_BUG
+                char tmp[1024] = { 0 };
+                snprintf(tmp, 1023, "%s - Page %d", name.raw().c_str(), curpage);
+                Glib::ustring title = tmp;
 #else
                 Glib::ustring title = Glib::ustring::compose(_("%1 - Page %2"), name, curpage);
 #endif

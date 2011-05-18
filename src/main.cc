@@ -103,15 +103,6 @@ void NrDeckbuilder::Run()
 	
 	if (main_win)
 	{	
-		/*
-		Gtk::Button* button = 0;
-		builder->get_widget("button", button);
-		button->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &NrDeckbuilder::LoadImage), s));
-
-		builder->get_widget("unloadbtn", button);
-		button->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &NrDeckbuilder::LoadImage), (NrCard*)0));
-		*/
-
 		InitList(false);
 		InitList(true);
 		InitActions();
@@ -527,8 +518,15 @@ void NrDeckbuilder::onTextExportClick()
 		for (NrCardList::iterator it = currentDeck.begin();
 		     it != currentDeck.end(); ++it)
 		{
+#if defined WIN32_COMPOSE_BUG
+			char tmp[1024] = { 0 };
+			snprintf(tmp, 1023, "%d\t%s\t%s\n", it->instanceNum,
+			         it->GetName(), it->print ? "*" : ""));
+			lOut->write(tmp);
+#else
 			lOut->write(Glib::ustring::compose("%1\t%2\t%3\n", it->instanceNum,
 			                                   it->GetName(), it->print ? "*" : ""));
+#endif
 		}
 	}
 	catch (const Glib::Exception& ex) 
