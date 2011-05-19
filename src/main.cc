@@ -521,7 +521,7 @@ void NrDeckbuilder::onTextExportClick()
 #if defined WIN32_COMPOSE_BUG
 			char tmp[1024] = { 0 };
 			snprintf(tmp, 1023, "%d\t%s\t%s\n", it->instanceNum,
-			         it->GetName(), it->print ? "*" : ""));
+			         it->GetName().raw().c_str(), it->print ? "*" : "");
 			lOut->write(tmp);
 #else
 			lOut->write(Glib::ustring::compose("%1\t%2\t%3\n", it->instanceNum,

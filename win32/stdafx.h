@@ -22,3 +22,4 @@
 
 #define ENABLE_NLS
 #define HAVE_HPDF
+#define WIN32_COMPOSE_BUG
