@@ -15,6 +15,8 @@
 #include <giomm/memoryinputstream.h>
 #include <giomm/file.h>
 #include <glibmm/i18n.h>
+#include <windows.h>
+#undef min
 
 #define PACKAGE_DATA_DIR ".."
 #define UI_FILE PACKAGE_DATA_DIR "/src/nr_deckbuilder.ui"
@@ -22,4 +24,5 @@
 
 #define ENABLE_NLS
 #define HAVE_HPDF
-#define WIN32_COMPOSE_BUG
+//#define WIN32_COMPOSE_BUG
+

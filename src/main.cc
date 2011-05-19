@@ -28,6 +28,36 @@
 #include <giomm/file.h>
 #include <glibmm/i18n.h>
 
+#if defined WIN32 && defined WIN32_FORMATSTREAM_BUG_WORKAROUND
+/*
+ * There's a bug in the windows glibmm ustring::FormatStream::to_string()
+ * The compile-time options make use of g_convert, which cannot convert
+ * from WCHAR_T to UTF-8. Then we change ustring.h to make to_string()
+ * calling to_string2(), and implement to_string2() with g_utf16_to_utf8().
+ *
+ * This is a ugly hack to avoid recompiling glibmm.
+ */
+namespace Glib {
+	ustring ustring::FormatStream::to_string2() const
+	{
+	  GError* error = 0;
+
+	  const std::wstring str = stream_.str();
+
+	  // Avoid going through iconv if wchar_t always contains UTF-16.
+	  glong n_bytes = 0;
+	  const ScopedPtr<char> buf (g_utf16_to_utf8(reinterpret_cast<const gunichar2*>(str.data()),
+												 str.size(), 0, &n_bytes, &error));
+
+	  if (error)
+	  {
+		Glib::Error::throw_exception(error);
+	  }
+
+	  return ustring(buf.get(), buf.get() + n_bytes);
+	}
+}
+#endif
 
 #ifdef ENABLE_NLS
 #  include <libintl.h>
@@ -53,14 +83,15 @@ main (int argc, char *argv[])
 	Gtk::Main kit(argc, argv);
 
 #if defined WIN32
-	std::locale::global(std::locale(""));
+	SetEnvironmentVariable(L"LANGUAGE", L"C");
+	SetEnvironmentVariable(L"LC_ALL", L"en");
+	std::locale::global(std::locale("C"));
 #endif
 
 	bindtextdomain(GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR);
 	bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 	textdomain(GETTEXT_PACKAGE);
 	
-	//Load the Glade file and instiate its widgets:	
 	try
 	{
 		NrDeckbuilder NR(kit);
@@ -518,15 +549,8 @@ void NrDeckbuilder::onTextExportClick()
 		for (NrCardList::iterator it = currentDeck.begin();
 		     it != currentDeck.end(); ++it)
 		{
-#if defined WIN32_COMPOSE_BUG
-			char tmp[1024] = { 0 };
-			snprintf(tmp, 1023, "%d\t%s\t%s\n", it->instanceNum,
-			         it->GetName().raw().c_str(), it->print ? "*" : "");
-			lOut->write(tmp);
-#else
 			lOut->write(Glib::ustring::compose("%1\t%2\t%3\n", it->instanceNum,
 			                                   it->GetName(), it->print ? "*" : ""));
-#endif
 		}
 	}
 	catch (const Glib::Exception& ex) 
