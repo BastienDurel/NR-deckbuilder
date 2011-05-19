@@ -2,9 +2,9 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "NR-Deckbuilder"
-#define MyAppVersion "0.1"
+#define MyAppVersion "0.2"
 #define MyAppPublisher "Geekwu.org"
-#define MyAppURL "http://www.geekwu.org/"
+#define MyAppURL "http://corrin.geekwu.org/~bastien/NR"
 #define MyAppExeName "NR-deckbuilder.exe"
   
 #define SourcesBase "C:\perso\NR-deckbuilder"
@@ -132,13 +132,13 @@ begin
  if curPageID = wpSelectTasks then begin
   if IsTaskSelected('download') then begin
    HasDownloadMaster := True; 
-   itd_addfile('http://corrin.geekwu.org/~bastien/NR/nr-full.db',expandconstant('{tmp}\master.db'));
+   itd_addfile('{#MyAppURL}/nr-full.db',expandconstant('{tmp}\master.db'));
   end; 
  end; 
  if curPageID = wpSelectComponents then begin
   if IsComponentSelected('redist') then begin 
    HasDownloadRedist := True;
-   itd_addfile('http://corrin.geekwu.org/~bastien/NR/vcredist_x86.exe',expandconstant('{tmp}\vcredist_x86.exe'));
+   itd_addfile('{#MyAppURL}/vcredist_x86.exe',expandconstant('{tmp}\vcredist_x86.exe'));
   end; 
  end; 
  result := True;
