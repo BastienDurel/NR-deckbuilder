@@ -6,38 +6,45 @@
     <property name="label" translatable="yes">New</property>
     <property name="short_label">New</property>
     <property name="stock_id">gtk-new</property>
+    <property name="tooltip" translatable="yes">New</property>
   </object>
   <object class="GtkAction" id="actionOpen">
     <property name="label" translatable="yes">Open</property>
     <property name="short_label">Open</property>
     <property name="stock_id">gtk-open</property>
+    <property name="tooltip" translatable="yes">Open</property>
   </object>
   <object class="GtkAction" id="actionPDFExport">
     <property name="label" translatable="yes">Export as _PDF</property>
     <property name="short_label">PDF</property>
     <property name="stock_id">gtk-page-setup</property>
     <property name="always_show_image">True</property>
+    <property name="tooltip" translatable="yes">Export as PDF</property>
   </object>
   <object class="GtkAction" id="actionQuit">
     <property name="label" translatable="yes">Quit</property>
     <property name="short_label">Quit</property>
     <property name="stock_id">gtk-quit</property>
+    <property name="tooltip" translatable="yes">Quit</property>
   </object>
   <object class="GtkAction" id="actionSave">
     <property name="label" translatable="yes">Save</property>
     <property name="short_label">Save</property>
     <property name="stock_id">gtk-save</property>
+    <property name="tooltip" translatable="yes">Save</property>
   </object>
   <object class="GtkAction" id="actionSaveAs">
     <property name="label" translatable="yes">Save as</property>
     <property name="short_label">Save as</property>
     <property name="stock_id">gtk-save-as</property>
+    <property name="tooltip" translatable="yes">Save as</property>
   </object>
   <object class="GtkAction" id="actionTextExport">
     <property name="label" translatable="yes">Export as _Text</property>
     <property name="short_label">Text</property>
     <property name="stock_id">gtk-file</property>
     <property name="always_show_image">True</property>
+    <property name="tooltip" translatable="yes">Export as Text</property>
   </object>
   <object class="GtkWindow" id="main_window">
     <property name="visible">True</property>
@@ -389,6 +396,8 @@
           <object class="GtkVPaned" id="vpaned1">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
+            <property name="position">300</property>
+            <property name="position_set">True</property>
             <child>
               <object class="GtkVBox" id="vbox2">
                 <property name="visible">True</property>

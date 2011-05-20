@@ -3,7 +3,8 @@
 ## Created by Anjuta
 
 uidir = $(datadir)/nr_deckbuilder/ui
-ui_DATA = nr_deckbuilder.ui
+ui_DATA = nr_deckbuilder.ui \
+	nr_sealed.ui
 
 AM_CPPFLAGS = \
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" \
@@ -28,7 +29,9 @@ nr_deckbuilder_SOURCES = \
 	main.h       \
 	s-q-l-error.h       \
 	s-q-l-error.cc       \
-	pdf.cc
+	pdf.cc       \
+	tournament.h       \
+	tournament.cc
 
 nr_deckbuilder_LDFLAGS = $(HPDF_LIBS_PATH)
 

@@ -67,6 +67,7 @@ namespace Glib {
 
 #include "nr-db.h"
 #include "nr-card.h"
+#include "tournament.h"
 
 /* For testing propose use the local (not installed) ui file */
 #if defined DEV_BUILD
@@ -150,7 +151,9 @@ void NrDeckbuilder::Run()
 			WritePDF(currentDeck, Gio::File::create_for_path("test.pdf"));
 		} catch (const Glib::Exception& ex) { std::cerr << ex.what() << std::endl; }
 #endif
-		
+
+		Tournament t(kit);
+		t.Run();
 		kit.run(*main_win);
 	}
 }
