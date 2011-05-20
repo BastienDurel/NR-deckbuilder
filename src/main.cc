@@ -439,6 +439,7 @@ void NrDeckbuilder::onNewClick()
 		currentDeck.clear();
 		RefreshDeck();
 		mIsDirty = false;
+		currentDeckFile.clear();
 	}
 }
 
