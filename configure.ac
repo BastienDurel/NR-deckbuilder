@@ -17,6 +17,12 @@ dnl   [HPDF_LIBS='-lhpdf'])
 dnl AC_SUBST([HPDF_LIBS])
 dnl AC_CHECK_LIB([hpdf], [HPDF_NewDoc], [], [AC_MSG_ERROR(Can't find libhpdf)])
 
+AC_ARG_WITH(dev,
+        [AS_HELP_STRING([--with-dev],[Compile in developpement mode])],
+        [AC_DEFINE([DEV_BUILD], [1], [Define a developpement build])],
+        [])
+
+
 AC_ARG_WITH(hpdf,
 [AS_HELP_STRING([--with-hpdf=PATH],[Look for hpdf in PATH.])],
     [

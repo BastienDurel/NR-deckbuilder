@@ -1,0 +1,14 @@
+Source: nr-deckbuilder
+Section: games
+Priority: extra
+Maintainer: Bastien Durel <bastien@durel.org>
+Build-Depends: debhelper (>= 7.0.50~), autotools-dev, libglibmm-2.4-dev, libgtkmm-2.4-dev, libhpdf-dev
+Standards-Version: 3.9.1
+Homepage: http://corrin.geekwu.org/~bastien/NR
+Vcs-Git: git@github.com:BastienDurel/NR-deckbuilder.git
+
+Package: nr-deckbuilder
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Deckbuilder for NetRunner, with PDF proxy generation
+
