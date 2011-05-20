@@ -75,7 +75,6 @@ namespace Glib {
 # endif
 # undef PACKAGE_LOCALE_DIR
 # define PACKAGE_LOCALE_DIR "Debug/po"
-# error dev build
 #else
 # define UI_FILE PACKAGE_DATA_DIR"/nr_deckbuilder/ui/nr_deckbuilder.ui"
 #endif
@@ -88,9 +87,7 @@ main (int argc, char *argv[])
 	Gtk::Main kit(argc, argv);
 
 #if defined WIN32
-	SetEnvironmentVariable(L"LANGUAGE", L"C");
-	SetEnvironmentVariable(L"LC_ALL", L"en");
-	std::locale::global(std::locale("C"));
+	std::locale::global(std::locale(""));
 #endif
 
 	bindtextdomain(GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR);
@@ -146,7 +143,7 @@ void NrDeckbuilder::Run()
 		LoadMaster();
 		RefreshDeck();
 
-#if 1 // debug
+#if defined DEV_BUILD // debug
 		try {
 			db->LoadDeck("test.nrdb", currentDeck);
 			RefreshDeck();
