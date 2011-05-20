@@ -128,6 +128,8 @@ begin
 end;
 
 function NextButtonClick(curPageID:integer):boolean;
+var
+ V: Cardinal;
 begin
  if curPageID = wpSelectTasks then begin
   if IsTaskSelected('download') then begin
@@ -137,9 +139,13 @@ begin
  end; 
  if curPageID = wpSelectComponents then begin
   if IsComponentSelected('redist') then begin 
-   HasDownloadRedist := True;
-   itd_addfile('{#MyAppURL}/vcredist_x86.exe',expandconstant('{tmp}\vcredist_x86.exe'));
+   V := 0;
+   RegQueryDWordValue(HKLM, 'SOFTWARE\Microsoft\VisualStudio\10.0\VC\VCRedist\x86\', 'Installed', V);
+   HasDownloadRedist := (V <> 1);
   end; 
+ end;
+ if HasDownloadRedist = True then begin
+  itd_addfile('{#MyAppURL}/vcredist_x86.exe',expandconstant('{tmp}\vcredist_x86.exe'));
  end; 
  result := True;
 end;
