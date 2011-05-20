@@ -69,11 +69,16 @@ namespace Glib {
 #include "nr-card.h"
 
 /* For testing propose use the local (not installed) ui file */
-/* #define UI_FILE PACKAGE_DATA_DIR"/nr_deckbuilder/ui/nr_deckbuilder.ui" */
-#if !defined UI_FILE
-#define UI_FILE "src/nr_deckbuilder.ui"
+#if defined DEV_BUILD
+# if !defined UI_FILE
+#  define UI_FILE "src/nr_deckbuilder.ui"
+# endif
+# undef PACKAGE_LOCALE_DIR
+# define PACKAGE_LOCALE_DIR "Debug/po"
+# error dev build
+#else
+# define UI_FILE PACKAGE_DATA_DIR"/nr_deckbuilder/ui/nr_deckbuilder.ui"
 #endif
-#define PACKAGE_LOCALE_DIR "Debug/po"
 
 #include "main.h"
 
