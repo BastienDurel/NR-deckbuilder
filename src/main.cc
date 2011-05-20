@@ -77,7 +77,9 @@ namespace Glib {
 # undef PACKAGE_LOCALE_DIR
 # define PACKAGE_LOCALE_DIR "Debug/po"
 #else
-# define UI_FILE PACKAGE_DATA_DIR"/nr_deckbuilder/ui/nr_deckbuilder.ui"
+# if !defined UI_FILE
+#  define UI_FILE PACKAGE_DATA_DIR"/nr_deckbuilder/ui/nr_deckbuilder.ui"
+# endif
 #endif
 
 #include "main.h"
