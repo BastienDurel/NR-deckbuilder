@@ -22,6 +22,10 @@
 
 #include <gtkmm.h>
 
+#if defined HAVE_BOOST_RANDOM
+#include <boost/random.hpp>
+#endif
+
 #include "nr-db.h"
 #include "nr-card.h"
 
@@ -50,6 +54,26 @@ public:
 	Tournament(Gtk::Main& k) : kit(k) {}
 
 	void Run();
+
+#if defined HAVE_BOOST_RANDOM
+	static boost::mt19937 rng;
+	static int Random(int Tmin, int Tmax) {
+		boost::uniform_int<> die_range(Tmin, Tmax);
+		boost::variate_generator<boost::mt19937&, boost::uniform_int<> > die(rng, die_range);
+		return die();
+	}
+#else
+	static int Random(int Tmin, int Tmax) {
+		static bool init = false;
+		if (!init)
+		{
+			init = true;
+			srand(time(0));
+		}
+		return Tmin + (rand() % (Tmax - Tmin));
+	}
+#endif
+	static int Random(int Tmax) { return Random(0, Tmax); }
 
 protected:
 	Gtk::Main& kit;

@@ -60,10 +60,13 @@ public:
 class NrDeckbuilder
 {
 	Gtk::Main& kit;
+	Glib::KeyFile prefs;
+	Glib::RefPtr<Gio::File> prefs_file;
 	
 	Glib::RefPtr<Gtk::Builder> builder;
 	Gtk::Window* main_win;
 	Gtk::Image* img;
+	Gtk::VPaned* paned;
 
 	NrDb* db;
 
@@ -82,6 +85,7 @@ class NrDeckbuilder
 	
 	public:
 		NrDeckbuilder(Gtk::Main&);
+		~NrDeckbuilder();
 		void Run();
 
 	protected:

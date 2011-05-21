@@ -48,6 +48,9 @@ AS_IF([test "x$with_hpdf" != xno],
       
 AC_CHECK_LIB([hpdf], [HPDF_LoadJpegImageFromMem],[AC_DEFINE([HAVE_HPDF_22], [1],[Have hpdf 2.2+])])
 
+AC_LANG([C++])
+AC_CHECK_HEADERS([boost/random.hpp],[AC_DEFINE([HAVE_BOOST_RANDOM], [1],[Have boost random])])
+
 dnl ***************************************************************************
 dnl Internatinalization
 dnl ***************************************************************************

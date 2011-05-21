@@ -115,12 +115,14 @@ main (int argc, char *argv[])
 
 NrDeckbuilder::NrDeckbuilder(Gtk::Main& a) : kit(a), mIsDirty(false)
 {
-	//Load the Glade file and instiate its widgets:	
+	//Load the Glade file and instantiate its widgets:	
 	builder = Gtk::Builder::create_from_file(UI_FILE);
 	main_win = 0;
 	builder->get_widget("main_window", main_win);
 	img = 0;
 	builder->get_widget("image", img);
+	paned = 0;
+	builder->get_widget("vpaned1", paned);
 	masterModel = Gtk::ListStore::create(MasterColumns);
     builder->get_widget("mastertreeview", masterList);
 	deckModel = Gtk::ListStore::create(DeckColumns);
@@ -131,6 +133,41 @@ NrDeckbuilder::NrDeckbuilder(Gtk::Main& a) : kit(a), mIsDirty(false)
 	{
 		throw Glib::FileError(Glib::FileError::FAILED, _("Cannot load Master DB"));
 	}
+
+	std::string prefsdir = Glib::build_filename(Glib::get_home_dir(), ".NR-deckbuilder");
+	Glib::RefPtr<Gio::File> dir = Gio::File::create_for_path(prefsdir);
+	if (!dir->query_exists())
+		dir->make_directory_with_parents();
+	std::string prefsfile = Glib::build_filename(prefsdir, "prefs.ini");
+	prefs_file = Gio::File::create_for_path(prefsfile);
+	if (!prefs_file->query_exists())
+	{
+		Glib::RefPtr<Gio::FileOutputStream> out = prefs_file->create_file(Gio::FILE_CREATE_PRIVATE);
+		out->write("[gui]\nmaster_pos=300\n\n[files]\n");
+		out->close();
+	}
+	prefs.load_from_file(prefs_file->get_path());
+	if (prefs.has_key("gui", "master_pos"))
+		paned->set_position(prefs.get_integer("gui", "master_pos"));
+	if (prefs.has_key("files", "last_deck"))
+	{
+		currentDeckFile = Gio::File::create_for_path(prefs.get_string("files", "last_deck"));
+		try {
+			db->LoadDeck(currentDeckFile->get_path().c_str(), currentDeck);
+		} catch (Glib::Exception& ex) {
+			ErrMsg(ex);
+		}
+	}
+}
+
+NrDeckbuilder::~NrDeckbuilder()
+{
+	prefs.set_integer("gui", "master_pos", paned->get_position());
+	if (currentDeckFile)
+		prefs.set_string("files", "last_deck", currentDeckFile->get_path());
+	Glib::RefPtr<Gio::FileOutputStream> out = prefs_file->replace(std::string(), true, Gio::FILE_CREATE_PRIVATE);
+	out->write(prefs.to_data());
+	out->close();
 }
 
 void NrDeckbuilder::Run()
@@ -146,8 +183,9 @@ void NrDeckbuilder::Run()
 		LoadMaster();
 		RefreshDeck();
 
-#if defined DEV_BUILD // debug
+#if defined DEV_BUILD && 0// debug
 		try {
+			currentDeckFile = Gio::File::create_for_path("test.nrdb");
 			db->LoadDeck("test.nrdb", currentDeck);
 			RefreshDeck();
 			WritePDF(currentDeck, Gio::File::create_for_path("test.pdf"));
