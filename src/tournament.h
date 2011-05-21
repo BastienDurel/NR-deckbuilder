@@ -70,7 +70,7 @@ public:
 			init = true;
 			srand(time(0));
 		}
-		return Tmin + (rand() % (Tmax - Tmin));
+		return Tmin + (rand() % (Tmax - Tmin + 1));
 	}
 #endif
 	static int Random(int Tmax) { return Random(0, Tmax); }
