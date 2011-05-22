@@ -239,7 +239,6 @@ void NrDeckbuilder::Run()
 							(_("You may download the last version on <u><tt>%1</tt></u>"), PACKAGE_URL);
 						M.set_secondary_text(msg, true);
 						M.add_button(_("Never warn me again"), Gtk::RESPONSE_CANCEL);
-						//Gtk::VBox* v = M.get_message_area();
 						//Gtk::LinkButton b(PACKAGE_URL, _("You may download the last version on"));
 						//M.property_message_area()->pack_start(b);
 						if (M.run() == Gtk::RESPONSE_CANCEL)
