@@ -5,46 +5,46 @@
   <object class="GtkAction" id="actionNew">
     <property name="label" translatable="yes">New</property>
     <property name="short_label">New</property>
-    <property name="stock_id">gtk-new</property>
     <property name="tooltip" translatable="yes">New</property>
+    <property name="stock_id">gtk-new</property>
   </object>
   <object class="GtkAction" id="actionOpen">
     <property name="label" translatable="yes">Open</property>
-    <property name="short_label">Open</property>
-    <property name="stock_id">gtk-open</property>
+    <property name="short_label" translatable="yes">Open</property>
     <property name="tooltip" translatable="yes">Open</property>
+    <property name="stock_id">gtk-open</property>
   </object>
   <object class="GtkAction" id="actionPDFExport">
     <property name="label" translatable="yes">Export as _PDF</property>
-    <property name="short_label">PDF</property>
+    <property name="short_label" translatable="yes">PDF</property>
+    <property name="tooltip" translatable="yes">Export as PDF</property>
     <property name="stock_id">gtk-page-setup</property>
     <property name="always_show_image">True</property>
-    <property name="tooltip" translatable="yes">Export as PDF</property>
   </object>
   <object class="GtkAction" id="actionQuit">
     <property name="label" translatable="yes">Quit</property>
-    <property name="short_label">Quit</property>
-    <property name="stock_id">gtk-quit</property>
+    <property name="short_label" translatable="yes">Quit</property>
     <property name="tooltip" translatable="yes">Quit</property>
+    <property name="stock_id">gtk-quit</property>
   </object>
   <object class="GtkAction" id="actionSave">
     <property name="label" translatable="yes">Save</property>
     <property name="short_label">Save</property>
+    <property name="tooltip">Save</property>
     <property name="stock_id">gtk-save</property>
-    <property name="tooltip" translatable="yes">Save</property>
   </object>
   <object class="GtkAction" id="actionSaveAs">
     <property name="label" translatable="yes">Save as</property>
-    <property name="short_label">Save as</property>
-    <property name="stock_id">gtk-save-as</property>
+    <property name="short_label" translatable="yes">Save as</property>
     <property name="tooltip" translatable="yes">Save as</property>
+    <property name="stock_id">gtk-save-as</property>
   </object>
   <object class="GtkAction" id="actionTextExport">
     <property name="label" translatable="yes">Export as _Text</property>
-    <property name="short_label">Text</property>
+    <property name="short_label" translatable="yes">Text</property>
+    <property name="tooltip" translatable="yes">Export as Text</property>
     <property name="stock_id">gtk-file</property>
     <property name="always_show_image">True</property>
-    <property name="tooltip" translatable="yes">Export as Text</property>
   </object>
   <object class="GtkWindow" id="main_window">
     <property name="visible">True</property>
@@ -74,6 +74,7 @@
                             <property name="label">gtk-new</property>
                             <property name="visible">True</property>
                             <property name="related_action">actionNew</property>
+                            <property name="use_underline">True</property>
                             <property name="use_stock">True</property>
                             <property name="always_show_image">True</property>
                             <property name="use_action_appearance">False</property>
@@ -129,20 +130,20 @@
                                   <object class="GtkImageMenuItem" id="menuitem2">
                                     <property name="visible">True</property>
                                     <property name="related_action">actionTextExport</property>
+                                    <property name="use_action_appearance">True</property>
                                     <property name="use_underline">True</property>
                                     <property name="use_stock">True</property>
                                     <property name="always_show_image">True</property>
-                                    <property name="use_action_appearance">True</property>
                                   </object>
                                 </child>
                                 <child>
                                   <object class="GtkImageMenuItem" id="menuitem3">
                                     <property name="visible">True</property>
                                     <property name="related_action">actionPDFExport</property>
+                                    <property name="use_action_appearance">True</property>
                                     <property name="use_underline">True</property>
                                     <property name="use_stock">True</property>
                                     <property name="always_show_image">True</property>
-                                    <property name="use_action_appearance">True</property>
                                   </object>
                                 </child>
                               </object>
@@ -162,7 +163,7 @@
                             <property name="use_underline">True</property>
                             <property name="use_stock">True</property>
                             <property name="always_show_image">True</property>
-														<property name="use_action_appearance">False</property>
+                            <property name="use_action_appearance">False</property>
                           </object>
                         </child>
                       </object>
@@ -404,6 +405,39 @@
                 <child>
                   <object class="GtkToolbar" id="mastertoolbar">
                     <property name="visible">True</property>
+                    <child>
+                      <object class="GtkToolButton" id="toolbuttonadd">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">Add</property>
+                        <property name="use_underline">True</property>
+                        <property name="stock_id">gtk-add</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="homogeneous">True</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkToolButton" id="toolbuttondel">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">Remove</property>
+                        <property name="use_underline">True</property>
+                        <property name="stock_id">gtk-remove</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="homogeneous">True</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkSeparatorToolItem" id="toolbutton1">
+                        <property name="visible">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="homogeneous">True</property>
+                      </packing>
+                    </child>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -425,7 +459,7 @@
                     </child>
                   </object>
                   <packing>
-                    <property name="position">1</property>
+                    <property name="position">2</property>
                   </packing>
                 </child>
               </object>
