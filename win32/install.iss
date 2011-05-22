@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "NR-Deckbuilder"
-#define MyAppVersion "0.2"
+#define MyAppVersion "0.3"
 #define MyAppPublisher "Geekwu.org"
 #define MyAppURL "http://corrin.geekwu.org/~bastien/NR"
 #define MyAppExeName "NR-deckbuilder.exe"
@@ -42,8 +42,9 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 Name: "download"; Description: "Download base master set"
 
 [Files]
-Source: "{#SourcesBase}\src\nr_deckbuilder.ui"; DestDir: "{app}\src"; Flags: ignoreversion
+Source: "{#SourcesBase}\src\nr_deckbuilder.ui"; DestDir: "{app}\src"; Flags: ignoreversion          
 Source: "{#SourcesBase}\win32\Release\NR-deckbuilder.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "{#SourcesBase}\po\bin\nr_deckbuilder.mo"; DestDir: "{app}\share\locale\fr\LC_MESSAGES"; Flags: ignoreversion
 Source: "{#SourcesBase}\sample\test.db"; DestDir: "{app}\share"; DestName: "master.db"; Flags: onlyifdoesntexist
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files  
 Source: "{#GtkmmBase}\bin\gdkmm-vc100-2_4.dll"; DestDir: "{app}\bin"; Components: gtkmm    

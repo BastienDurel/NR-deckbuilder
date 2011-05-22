@@ -247,7 +247,7 @@ void NrDeckbuilder::Run()
 				} else { LOG("no stream"); }
 			} else { LOG("no lastver"); }
 		}
-		catch (const Glib::Exception& ex) { LOG(ex.what()); }
+		catch (const Glib::Exception& ex) { LOG(ex.what()); ex; }
 
 		kit.run(*main_win);
 	}
