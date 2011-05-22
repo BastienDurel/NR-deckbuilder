@@ -2,4 +2,6 @@
 
 src/main.cc
 src/pdf.cc
+src/tournament.cc
 [type: gettext/glade]src/nr_deckbuilder.ui
+[type: gettext/glade]src/nr_sealed.ui
