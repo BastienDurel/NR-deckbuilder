@@ -59,38 +59,7 @@ public:
 
 class NrDeckbuilder
 {
-	Gtk::Main& kit;
-	Glib::KeyFile prefs;
-	Glib::RefPtr<Gio::File> prefs_file;
-	
-	Glib::RefPtr<Gtk::Builder> builder;
-	Gtk::Window* main_win;
-	Gtk::Image* img;
-	Gtk::VPaned* paned;
-	Gtk::Entry* searchbox;
-	Gtk::Statusbar* deckstatusbar;
-
-	NrDb* db;
-
-	CardListColumns MasterColumns;
-	Glib::RefPtr<Gtk::ListStore> masterModel;
-	Gtk::TreeView* masterList;
-	
-	DeckListColumns DeckColumns;
-	Glib::RefPtr<Gtk::ListStore> deckModel;
-	Gtk::TreeView* deckList;
-
-	NrCardList currentDeck;
-	Glib::RefPtr<Gio::File> currentDeckFile;
-
-	bool mIsDirty;
-	searchType mCurrentSearch;
-	
 	public:
-		NrDeckbuilder(Gtk::Main&);
-		~NrDeckbuilder();
-		void Run();
-
 		typedef enum {
 			name,
 			type,
@@ -99,6 +68,39 @@ class NrDeckbuilder
 			all,
 			advanced
 		} searchType;
+
+	private:
+		Gtk::Main& kit;
+		Glib::KeyFile prefs;
+		Glib::RefPtr<Gio::File> prefs_file;
+	
+		Glib::RefPtr<Gtk::Builder> builder;
+		Gtk::Window* main_win;
+		Gtk::Image* img;
+		Gtk::VPaned* paned;
+		Gtk::Entry* searchbox;
+		Gtk::Statusbar* deckstatusbar;
+
+		NrDb* db;
+
+		CardListColumns MasterColumns;
+		Glib::RefPtr<Gtk::ListStore> masterModel;
+		Gtk::TreeView* masterList;
+	
+		DeckListColumns DeckColumns;
+		Glib::RefPtr<Gtk::ListStore> deckModel;
+		Gtk::TreeView* deckList;
+
+		NrCardList currentDeck;
+		Glib::RefPtr<Gio::File> currentDeckFile;
+
+		bool mIsDirty;
+		searchType mCurrentSearch;
+	
+	public:
+		NrDeckbuilder(Gtk::Main&);
+		~NrDeckbuilder();
+		void Run();
 
 	protected:
 		void LoadImage(NrCard& card);
@@ -130,6 +132,7 @@ class NrDeckbuilder
 		void onNumClick(const Glib::ustring &, const Glib::ustring&);
 		void onPrintClick(const Glib::ustring &);
 		void onSearchIconPressed(Gtk::EntryIconPosition icon_pos, const GdkEventButton* event);
+		void onSearchActivated();
 
 		void onActivate(const Gtk::TreePath& p, Gtk::TreeViewColumn* const& c, bool aDeck, Gtk::TreeView* aTreeView);
 
@@ -139,6 +142,7 @@ class NrDeckbuilder
 		bool AskForLooseModifications(const char* secondMsg=0);
 
 		void SetCurrentSearch(searchType s);
+		void FilterMaster(const Glib::ustring& filter);
 
 		
 };

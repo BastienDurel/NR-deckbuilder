@@ -132,6 +132,7 @@ NrDeckbuilder::NrDeckbuilder(Gtk::Main& a) : kit(a), mIsDirty(false)
 	searchbox = 0;
 	builder->get_widget("searchentry", searchbox);
 	searchbox->signal_icon_press().connect(sigc::mem_fun(*this, &NrDeckbuilder::onSearchIconPressed));
+	searchbox->signal_activate().connect(sigc::mem_fun(*this, &NrDeckbuilder::onSearchActivated));
 	deckstatusbar = 0;
 	builder->get_widget("deckstatusbar", deckstatusbar);
 
@@ -156,6 +157,8 @@ NrDeckbuilder::NrDeckbuilder(Gtk::Main& a) : kit(a), mIsDirty(false)
 	prefs.load_from_file(prefs_file->get_path());
 	if (prefs.has_key("gui", "master_pos"))
 		paned->set_position(prefs.get_integer("gui", "master_pos"));
+	if (prefs.has_key("gui", "main_h") && prefs.has_key("gui", "main_w"))
+		main_win->resize(prefs.get_integer("gui", "main_w"), prefs.get_integer("gui", "main_h"));
 	if (prefs.has_key("files", "last_deck"))
 	{
 		currentDeckFile = Gio::File::create_for_path(prefs.get_string("files", "last_deck"));
@@ -165,11 +168,16 @@ NrDeckbuilder::NrDeckbuilder(Gtk::Main& a) : kit(a), mIsDirty(false)
 			ErrMsg(ex);
 		}
 	}
+	SetCurrentSearch(name);
 }
 
 NrDeckbuilder::~NrDeckbuilder()
 {
 	prefs.set_integer("gui", "master_pos", paned->get_position());
+	int w, h;
+	main_win->get_size(w, h);
+	prefs.set_integer("gui", "main_w", w);
+	prefs.set_integer("gui", "main_h", h);
 	if (currentDeckFile)
 		prefs.set_string("files", "last_deck", currentDeckFile->get_path());
 	Glib::RefPtr<Gio::FileOutputStream> out = prefs_file->replace(std::string(), true, Gio::FILE_CREATE_PRIVATE);
@@ -709,14 +717,14 @@ void NrDeckbuilder::changeNum(Gtk::TreeModel::iterator& iter, gint num)
 
 void NrDeckbuilder::onNumClick(const Glib::ustring &aPath, const Glib::ustring& aText)
 {
-	std::cout << "onNumClick(" << aPath << ", " << aText << ")" << std::endl;
+	LOG("onNumClick(" << aPath << ", " << aText << ")");
 	Gtk::TreeModel::iterator iter = deckModel->get_iter(aPath);
 	changeNum(iter, atoi(aText.raw().c_str()));
 }
 
 void NrDeckbuilder::onPrintClick(const Glib::ustring &aPath)
 {
-	std::cout << "onPrintClick(" << aPath << ")" << std::endl;
+	LOG("onPrintClick(" << aPath << ")");
 	Gtk::TreeModel::iterator iter = deckModel->get_iter(aPath);
 	if (iter) try
 	{
@@ -743,12 +751,20 @@ void NrDeckbuilder::onSearchIconPressed(Gtk::EntryIconPosition pos,
 	{
 		case Gtk::ENTRY_ICON_PRIMARY:
 		{
+			Gtk::Menu* m = 0;
+			builder->get_widget("searchmenu", m);
+			if (m)
+				m->popup(event->button, event->time);
 			break;
 		}
 		case Gtk::ENTRY_ICON_SECONDARY:
 			searchbox->set_text("");
 			break;
 	}
+}
+
+void NrDeckbuilder::FilterMaster(const Glib::ustring& filter)
+{
 }
 
 void NrDeckbuilder::UpdateDeckStatus()
@@ -769,9 +785,22 @@ void NrDeckbuilder::UpdateDeckStatus()
 	deckstatusbar->push(msg);
 }
 
+void NrDeckbuilder::onSearchActivated()
+{
+	LOG("onSearchActivated: " << searchbox->get_text());
+	switch (mCurrentSearch)
+	{
+		case name:
+			FilterMaster(Glib::ustring::compose("name like '%1%%'",
+			                                    searchbox->get_text()));
+			break;
+	}
+}
+
 void NrDeckbuilder::SetCurrentSearch(searchType s)
 {
 	mCurrentSearch = s;
+	// TODO: helper text ??
 }
 
 #if defined WIN32 && defined NDEBUG
