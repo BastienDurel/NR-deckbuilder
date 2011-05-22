@@ -142,7 +142,7 @@ class NrDeckbuilder
 		bool AskForLooseModifications(const char* secondMsg=0);
 
 		void SetCurrentSearch(searchType s);
-		void FilterMaster(const Glib::ustring& filter);
+		void FilterMaster(const Glib::ustring& filter, bool adv=false);
 
 		
 };

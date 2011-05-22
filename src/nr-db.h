@@ -33,7 +33,7 @@ public:
 	bool Import(const char* aFile);
 
 	bool List();
-	bool List(const Glib::ustring& aFilter);
+	bool List(const Glib::ustring& aFilter, bool adv=false);
 	void EndList();
 	int ListCount() const { return listCount; }
 	NrCard* Next();

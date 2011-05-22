@@ -31,6 +31,7 @@
 #include <giomm/memoryinputstream.h>
 #include <giomm/file.h>
 #include "s-q-l-error.h"
+#include "uti.h"
 
 NrDb::NrDb(const char* aFile) : db(0), listStmt(0), isDeck(false)
 {
@@ -119,7 +120,7 @@ bool NrDb::Import(const char* aFile)
 	return false;
 }
 
-static const Glib::ustring SELECT("select card.name, card.cost, group_concat(keyword.keyword, ' - ') keywords, points, text, flavortext, runner, lower(type), rarity ");
+static const Glib::ustring SELECT("select card.name name, card.cost cost, group_concat(keyword.keyword, '-') keywords, points, text, flavortext, runner, lower(type) type, rarity ");
 static const Glib::ustring SELECT_COUNT("select count(1) from card");
 static const Glib::ustring FROM("from card, keyword ");
 static const Glib::ustring WHERE("where card.name = keyword.card ");
@@ -155,9 +156,11 @@ bool NrDb::List()
 	return true;
 }
 
-bool NrDb::List(const Glib::ustring& aFilter)
+bool NrDb::List(const Glib::ustring& aFilter, bool adv)
 {
 	if (!db) return false;
+	if (aFilter.size() == 0)
+		return List();
 
 	if (listStmt)
 	{ /* Clean previous */
@@ -165,10 +168,11 @@ bool NrDb::List(const Glib::ustring& aFilter)
 	}
 
 	/* start query */
-	listSql = SELECT + FROM + WHERE;
-	if (aFilter.size())
-		listSql += " AND " + aFilter;
-	listSql += GROUP;
+	if (adv)
+		listSql = SELECT + FROM + WHERE + " and name in (select distinct name " + FROM + WHERE + " and " + aFilter + ")" + GROUP;
+	else
+		listSql = "select * from (" + SELECT + FROM + WHERE + GROUP + ") where " + aFilter;
+	LOG(listSql);
 	int err = sqlite3_prepare_v2(db, listSql.c_str(), listSql.bytes() + 1, &listStmt, 0);
 	if (err != SQLITE_OK)
 	{

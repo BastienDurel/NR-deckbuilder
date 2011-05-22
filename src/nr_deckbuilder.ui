@@ -462,6 +462,7 @@
                                 <property name="can_focus">True</property>
                                 <property name="primary_icon_stock">gtk-find</property>
                                 <property name="secondary_icon_stock">gtk-clear</property>
+                                <property name="has_tooltip">True</property>
                               </object>
                               <packing>
                                 <property name="position">1</property>

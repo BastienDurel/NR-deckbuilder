@@ -135,6 +135,7 @@ NrDeckbuilder::NrDeckbuilder(Gtk::Main& a) : kit(a), mIsDirty(false)
 	searchbox->signal_activate().connect(sigc::mem_fun(*this, &NrDeckbuilder::onSearchActivated));
 	deckstatusbar = 0;
 	builder->get_widget("deckstatusbar", deckstatusbar);
+	mCurrentSearch = all;
 
 	db = NrDb::Master();
 	if (!db)
@@ -253,6 +254,7 @@ bool NrDeckbuilder::AskForLooseModifications(const char* secondMsg)
 
 void NrDeckbuilder::InitActions()
 {
+	/* actions */
 	Glib::RefPtr<Gtk::Action> a;
 	Glib::RefPtr<Glib::Object> o;
 	o = builder->get_object("actionQuit");
@@ -289,6 +291,28 @@ void NrDeckbuilder::InitActions()
 	if (o) a = Glib::RefPtr<Gtk::Action>::cast_dynamic(o); else a.clear();
 	if (a) a->signal_activate().
 		connect(sigc::mem_fun(*this, &NrDeckbuilder::onPDFExportClick));
+
+
+	/* menus */
+	Gtk::MenuItem* m = 0;
+	builder->get_widget("menuitem-search-name", m);
+	if (m) m->signal_activate().connect
+		(sigc::bind<searchType>(sigc::mem_fun(*this, &NrDeckbuilder::SetCurrentSearch), name));
+	builder->get_widget("menuitem-search-type", m);
+	if (m) m->signal_activate().connect
+		(sigc::bind<searchType>(sigc::mem_fun(*this, &NrDeckbuilder::SetCurrentSearch), type));
+	builder->get_widget("menuitem-search-key", m);
+	if (m) m->signal_activate().connect
+		(sigc::bind<searchType>(sigc::mem_fun(*this, &NrDeckbuilder::SetCurrentSearch), keywords));
+	builder->get_widget("menuitem-search-text", m);
+	if (m) m->signal_activate().connect
+		(sigc::bind<searchType>(sigc::mem_fun(*this, &NrDeckbuilder::SetCurrentSearch), text));
+	builder->get_widget("menuitem-search-all", m);
+	if (m) m->signal_activate().connect
+		(sigc::bind<searchType>(sigc::mem_fun(*this, &NrDeckbuilder::SetCurrentSearch), all));
+	builder->get_widget("menuitem-search-adv", m);
+	if (m) m->signal_activate().connect
+		(sigc::bind<searchType>(sigc::mem_fun(*this, &NrDeckbuilder::SetCurrentSearch), advanced));
 }
 
 void NrDeckbuilder::InitList(bool aDeck)
@@ -390,6 +414,7 @@ void NrDeckbuilder::LoadList(NrCardList::const_iterator lbegin, NrCardList::cons
 			refListStore = deckModel;
 		else
 			refListStore = masterModel;
+		refListStore->clear();
   		Gtk::TreeModel::iterator iter;
   		for (NrCardList::const_iterator citer = lbegin; citer != lend; ++citer) {
     		iter = refListStore->append();
@@ -763,8 +788,26 @@ void NrDeckbuilder::onSearchIconPressed(Gtk::EntryIconPosition pos,
 	}
 }
 
-void NrDeckbuilder::FilterMaster(const Glib::ustring& filter)
+void NrDeckbuilder::FilterMaster(const Glib::ustring& filter, bool adv)
 {
+	NrCardList tmp;
+	try
+	{
+		LOG("filter: " << filter);
+		NrCard* card;
+		db->List(filter, adv);
+		while (card = db->Next())
+		{
+			tmp.push_back(*card);
+		}
+		db->EndList();
+		LOG("tmp: size = " << tmp.size());
+		LoadList(tmp.begin(), tmp.end());
+	}
+	catch (const Glib::Exception& ex)
+	{
+		ErrMsg(ex);
+	}
 }
 
 void NrDeckbuilder::UpdateDeckStatus()
@@ -788,19 +831,72 @@ void NrDeckbuilder::UpdateDeckStatus()
 void NrDeckbuilder::onSearchActivated()
 {
 	LOG("onSearchActivated: " << searchbox->get_text());
+	if (searchbox->get_text().size() == 0)
+	{
+		LoadMaster();
+		return;
+	}
 	switch (mCurrentSearch)
 	{
 		case name:
-			FilterMaster(Glib::ustring::compose("name like '%1%%'",
+			FilterMaster(Glib::ustring::compose("name like '%%%1%%'",
 			                                    searchbox->get_text()));
+			break;
+		case type:
+			FilterMaster(Glib::ustring::compose("type like '%1'",
+			                                    searchbox->get_text()));
+			break;
+		case keywords:
+			FilterMaster(Glib::ustring::compose("keywords like '%1' or keywords like '%%-%1-%%' or keywords like '%1-%%' or keywords like '%%-%1'",
+			                                    searchbox->get_text()));
+			break;
+		case text:
+			FilterMaster(Glib::ustring::compose("text like '%%%1%%'",
+			                                    searchbox->get_text()));
+			break;
+		case all:
+			FilterMaster(Glib::ustring::compose("name like '%%%1%%' or type like '%1' or keywords like '%1' or keywords like '%%-%1-%%' or keywords like '%1-%%' or keywords like '%%-%1' or text like '%%%1%%'",
+			                                    searchbox->get_text()));
+			break;
+		case advanced:
+			FilterMaster(searchbox->get_text(), true);
 			break;
 	}
 }
 
 void NrDeckbuilder::SetCurrentSearch(searchType s)
 {
+	LOG("SetCurrentSearch(" << (int)s << ")");
+	if (mCurrentSearch != s)
+	{
+		searchbox->set_text("");
+		switch (s)
+		{
+			case name:
+				searchbox->set_tooltip_text(_("Card name contains"));
+				break;
+			case type:
+				searchbox->set_tooltip_text(_("Card type is"));
+				break;
+			case keywords:
+				searchbox->set_tooltip_text(_("Card contains keyword"));
+				break;
+			case text:
+				searchbox->set_tooltip_text(_("Card text contains"));
+				break;
+			case all:
+				searchbox->set_tooltip_text(_("Card name, keywords, or text contains"));
+				break;
+			case advanced:
+				searchbox->set_tooltip_text(_("Enter an SQL expression to select cards"));
+				break;
+			default:
+				searchbox->set_tooltip_text("");
+				break;
+		}
+		searchbox->trigger_tooltip_query();
+	}
 	mCurrentSearch = s;
-	// TODO: helper text ??
 }
 
 #if defined WIN32 && defined NDEBUG
