@@ -68,6 +68,7 @@ class NrDeckbuilder
 	Gtk::Image* img;
 	Gtk::VPaned* paned;
 	Gtk::Entry* searchbox;
+	Gtk::Statusbar* deckstatusbar;
 
 	NrDb* db;
 
@@ -83,11 +84,21 @@ class NrDeckbuilder
 	Glib::RefPtr<Gio::File> currentDeckFile;
 
 	bool mIsDirty;
+	searchType mCurrentSearch;
 	
 	public:
 		NrDeckbuilder(Gtk::Main&);
 		~NrDeckbuilder();
 		void Run();
+
+		typedef enum {
+			name,
+			type,
+			keywords,
+			text,
+			all,
+			advanced
+		} searchType;
 
 	protected:
 		void LoadImage(NrCard& card);
@@ -97,6 +108,7 @@ class NrDeckbuilder
 
 		void RefreshDeck();
 		void SaveDeck();
+		void UpdateDeckStatus();
 
 		NrCard& GetSelectedCard(Gtk::TreeView* aTreeView, bool aInDeck=false);
 
@@ -125,6 +137,8 @@ class NrDeckbuilder
 		static void ErrMsg(const Glib::Exception& msg) { ErrMsg(msg.what()); }
 		static bool AskForExistingOverwrite(const char* secondMsg=0);
 		bool AskForLooseModifications(const char* secondMsg=0);
+
+		void SetCurrentSearch(searchType s);
 
 		
 };

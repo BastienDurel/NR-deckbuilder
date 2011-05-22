@@ -132,6 +132,8 @@ NrDeckbuilder::NrDeckbuilder(Gtk::Main& a) : kit(a), mIsDirty(false)
 	searchbox = 0;
 	builder->get_widget("searchentry", searchbox);
 	searchbox->signal_icon_press().connect(sigc::mem_fun(*this, &NrDeckbuilder::onSearchIconPressed));
+	deckstatusbar = 0;
+	builder->get_widget("deckstatusbar", deckstatusbar);
 
 	db = NrDb::Master();
 	if (!db)
@@ -363,6 +365,7 @@ void NrDeckbuilder::RefreshDeck()
 				break;
 			}
 	}
+	UpdateDeckStatus();
 }
 
 void NrDeckbuilder::LoadList(NrCardList::const_iterator lbegin, NrCardList::const_iterator lend, bool aDeck)
@@ -701,6 +704,7 @@ void NrDeckbuilder::changeNum(Gtk::TreeModel::iterator& iter, gint num)
 	{
 		ErrMsg(ex);
 	}
+	UpdateDeckStatus();
 }
 
 void NrDeckbuilder::onNumClick(const Glib::ustring &aPath, const Glib::ustring& aText)
@@ -738,11 +742,36 @@ void NrDeckbuilder::onSearchIconPressed(Gtk::EntryIconPosition pos,
 	switch (pos)
 	{
 		case Gtk::ENTRY_ICON_PRIMARY:
+		{
 			break;
+		}
 		case Gtk::ENTRY_ICON_SECONDARY:
 			searchbox->set_text("");
 			break;
 	}
+}
+
+void NrDeckbuilder::UpdateDeckStatus()
+{
+	Glib::ustring msg;
+	int count = 0;
+	int agenda = 0;
+	for (NrCardList::iterator it = currentDeck.begin(); it != currentDeck.end(); ++it)
+	{
+		count += it->instanceNum;
+		if (it->GetType() == NrCard::agenda)
+			agenda += it->instanceNum * it->GetPoints();
+	}
+	if (agenda)
+		msg = Glib::ustring::compose(_("Count: %1 - Agenda points: %2"), count, agenda);
+	else
+		msg = Glib::ustring::compose(_("Count: %1"), count);
+	deckstatusbar->push(msg);
+}
+
+void NrDeckbuilder::SetCurrentSearch(searchType s)
+{
+	mCurrentSearch = s;
 }
 
 #if defined WIN32 && defined NDEBUG
