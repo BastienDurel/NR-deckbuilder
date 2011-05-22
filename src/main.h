@@ -67,6 +67,7 @@ class NrDeckbuilder
 	Gtk::Window* main_win;
 	Gtk::Image* img;
 	Gtk::VPaned* paned;
+	Gtk::Entry* searchbox;
 
 	NrDb* db;
 
@@ -116,6 +117,7 @@ class NrDeckbuilder
 
 		void onNumClick(const Glib::ustring &, const Glib::ustring&);
 		void onPrintClick(const Glib::ustring &);
+		void onSearchIconPressed(Gtk::EntryIconPosition icon_pos, const GdkEventButton* event);
 
 		void onActivate(const Gtk::TreePath& p, Gtk::TreeViewColumn* const& c, bool aDeck, Gtk::TreeView* aTreeView);
 

@@ -69,6 +69,8 @@ namespace Glib {
 #include "nr-card.h"
 #include "tournament.h"
 
+#include "uti.h"
+
 /* For testing propose use the local (not installed) ui file */
 #if defined DEV_BUILD
 # if !defined UI_FILE
@@ -127,6 +129,9 @@ NrDeckbuilder::NrDeckbuilder(Gtk::Main& a) : kit(a), mIsDirty(false)
     builder->get_widget("mastertreeview", masterList);
 	deckModel = Gtk::ListStore::create(DeckColumns);
 	builder->get_widget("decktreeview", deckList);
+	searchbox = 0;
+	builder->get_widget("searchentry", searchbox);
+	searchbox->signal_icon_press().connect(sigc::mem_fun(*this, &NrDeckbuilder::onSearchIconPressed));
 
 	db = NrDb::Master();
 	if (!db)
@@ -183,7 +188,8 @@ void NrDeckbuilder::Run()
 		LoadMaster();
 		RefreshDeck();
 
-#if defined DEV_BUILD && 0// debug
+#if defined DEV_BUILD// debug
+# if 0
 		try {
 			currentDeckFile = Gio::File::create_for_path("test.nrdb");
 			db->LoadDeck("test.nrdb", currentDeck);
@@ -191,9 +197,10 @@ void NrDeckbuilder::Run()
 			WritePDF(currentDeck, Gio::File::create_for_path("test.pdf"));
 		} catch (const Glib::Exception& ex) { std::cerr << ex.what() << std::endl; }
 #endif
-
 		Tournament t(kit);
 		t.Run();
+#endif
+
 		kit.run(*main_win);
 	}
 }
@@ -721,6 +728,20 @@ void NrDeckbuilder::onPrintClick(const Glib::ustring &aPath)
 	catch (const Glib::Exception& ex) 
 	{
 		ErrMsg(ex);
+	}
+}
+
+void NrDeckbuilder::onSearchIconPressed(Gtk::EntryIconPosition pos, 
+                                        const GdkEventButton* event)
+{
+	LOG("onSearchIconPressed(" << (int)pos << ", " << event->type << ")");
+	switch (pos)
+	{
+		case Gtk::ENTRY_ICON_PRIMARY:
+			break;
+		case Gtk::ENTRY_ICON_SECONDARY:
+			searchbox->set_text("");
+			break;
 	}
 }
 

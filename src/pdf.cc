@@ -32,14 +32,7 @@
 #include <glibmm/i18n.h>
 #include "nr-card.h"
 #include "nr-db.h"
-
-#if defined NDEBUG
-#define LOG(x)
-#define LOGN(x)
-#else
-#define LOG(x) std::cerr << x << std::endl
-#define LOGN(x) std::cerr << x
-#endif
+#include "uti.h"
  
 class PrintProxiesOperation : public Gtk::PrintOperation
 {

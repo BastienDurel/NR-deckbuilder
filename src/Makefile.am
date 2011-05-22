@@ -31,7 +31,8 @@ nr_deckbuilder_SOURCES = \
 	s-q-l-error.cc       \
 	pdf.cc       \
 	tournament.h       \
-	tournament.cc
+	tournament.cc       \
+	uti.h
 
 nr_deckbuilder_LDFLAGS = $(HPDF_LIBS_PATH)
 
