@@ -208,12 +208,62 @@ void NrDeckbuilder::Run()
 			WritePDF(currentDeck, Gio::File::create_for_path("test.pdf"));
 		} catch (const Glib::Exception& ex) { std::cerr << ex.what() << std::endl; }
 #endif
+#if 0
 		Tournament t(kit);
 		t.Run();
 #endif
+#endif
+		if (!prefs.has_key("gui", "no_new_version_check") || !prefs.get_integer("gui", "no_new_version_check"))
+		try
+		{
+			LOG(PACKAGE_URL "/lastver.txt");
+			Glib::RefPtr<Gio::File> lastver = Gio::File::create_for_uri(PACKAGE_URL "/lastver.txt");
+			if (lastver)
+			{
+				Glib::RefPtr<Gio::FileInputStream> stream = lastver->read();
+				if (stream)
+				{
+					char buffer[1024] = { '\0' };
+					gsize bytes_read = 0;
+					bool ok = stream->read_all(buffer, sizeof(buffer) - 1, bytes_read);
+					LOG("read: " << ok << " [" << buffer << "](" << bytes_read << ")");
+					Version cur = ParseVersion(PACKAGE_VERSION);
+					Version last = ParseVersion(buffer);
+					if (cur < last)
+					{
+						Glib::ustring msg = Glib::ustring::compose
+							(_("<b>You are using %5 version <i>%1.%2</i>. Last version is <i>%3.%4</i></b>"), 
+							 cur.first, cur.second, last.first, last.second, PACKAGE_NAME);
+						Gtk::MessageDialog M(msg, true, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK, true);
+						msg = Glib::ustring::compose
+							(_("You may download the last version on <u><tt>%1</tt></u>"), PACKAGE_URL);
+						M.set_secondary_text(msg, true);
+						M.add_button(_("Never warn me again"), Gtk::RESPONSE_CANCEL);
+						//Gtk::VBox* v = M.get_message_area();
+						//Gtk::LinkButton b(PACKAGE_URL, _("You may download the last version on"));
+						//M.property_message_area()->pack_start(b);
+						if (M.run() == Gtk::RESPONSE_CANCEL)
+							prefs.set_integer("gui", "no_new_version_check", 1);
+					}
+				} else { LOG("no stream"); }
+			} else { LOG("no lastver"); }
+		}
+		catch (const Glib::Exception& ex) { LOG(ex.what()); }
 
 		kit.run(*main_win);
 	}
+}
+
+NrDeckbuilder::Version NrDeckbuilder::ParseVersion(const char* v)
+{
+	Version ret;
+	char dummy;
+	std::istringstream is(v);
+	is >> ret.first >> dummy >> ret.second;
+	if (dummy != '.')
+		throw Glib::OptionError(Glib::OptionError::BAD_VALUE, Glib::ustring::compose(_("invalid version: %1"), v));
+	LOG(ret.first << dummy << ret.second);
+	return ret;
 }
 
 void NrDeckbuilder::ErrMsg(const Glib::ustring& msg)
@@ -426,8 +476,7 @@ void NrDeckbuilder::LoadList(NrCardList::const_iterator lbegin, NrCardList::cons
     		row[MasterColumns.m_col_keywords] = citer->GetKeywords();
     		row[MasterColumns.m_col_cost] = citer->GetCost();
 			if (citer->GetPoints() > -1) {
-				char tmp[12]; sprintf(tmp, "%d", citer->GetPoints());
-				row[MasterColumns.m_col_points] = tmp;
+				row[MasterColumns.m_col_points] = Glib::ustring::compose("%1", citer->GetPoints());
 			} else {
 				row[MasterColumns.m_col_points] = "";
 			}

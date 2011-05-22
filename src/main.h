@@ -69,6 +69,8 @@ class NrDeckbuilder
 			advanced
 		} searchType;
 
+		typedef std::pair<int, int> Version;
+
 	private:
 		Gtk::Main& kit;
 		Glib::KeyFile prefs;
@@ -101,6 +103,8 @@ class NrDeckbuilder
 		NrDeckbuilder(Gtk::Main&);
 		~NrDeckbuilder();
 		void Run();
+
+		static Version ParseVersion(const char* v);
 
 	protected:
 		void LoadImage(NrCard& card);

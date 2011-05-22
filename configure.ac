@@ -9,6 +9,7 @@ AC_CONFIG_HEADERS([config.h])
 AM_MAINTAINER_MODE
 
 AC_PROG_CXX
+AC_DEFINE([PACKAGE_URL],["http://corrin.geekwu.org/~bastien/NR"],[Define to the home page for this package.])
 
 dnl AC_ARG_WITH([hpdf-lib-path],
 dnl   [AS_HELP_STRING([--with-hpdf-lib-path], [location of the hpdf library])],
