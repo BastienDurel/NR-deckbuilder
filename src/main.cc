@@ -554,9 +554,14 @@ void NrDeckbuilder::SaveDeck()
 
 void NrDeckbuilder::onSelect(Gtk::TreeView* aTreeView)
 {
+	if (aTreeView == UI.deckList)
+	{
+		bool lIsSelected = aTreeView->get_selection()->get_selected();
+		UI.toolbuttondel->set_sensitive(lIsSelected);
+	}
 	try
 	{
-		if (!aTreeView->get_selection()->get_selected())
+		if (!aTreeView->get_selection()->get_selected()) 
 			return;
 		NrCard& card = GetSelectedCard(aTreeView);
 		if (!card.GetImage()) 
