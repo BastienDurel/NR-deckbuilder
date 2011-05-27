@@ -110,14 +110,44 @@ bool NrDb::Import(const char* aFile)
 {
 	int err;
 	char* errmsg = 0;
-	int (*callback)(void*,int,char**,char**) = 0;
-	void* callback_param = 0;
-	err = sqlite3_exec(db, "ATTACH DATABASE aFile AS imp", callback, callback_param, &errmsg);
-	err = sqlite3_exec(db, "insert into card select * from imp.card", callback, callback_param, &errmsg);
-	err = sqlite3_exec(db, "insert into keyword select * from imp.keyword", callback, callback_param, &errmsg);
-	err = sqlite3_exec(db, "insert into illustration select * from imp.illustration", callback, callback_param, &errmsg);
-	err = sqlite3_exec(db, "DETACH DATABASE imp", callback, callback_param, &errmsg);
-	return false;
+	err = sqlite3_exec(db, "ATTACH DATABASE aFile AS imp", 0, 0, &errmsg);
+	if (err != SQLITE_OK)
+		throw SQLError("attach error", errmsg, true);
+	try 
+	{
+		err = sqlite3_exec(db, "BEGIN_TRAN", 0, 0, &errmsg);
+		if (err != SQLITE_OK)
+			throw SQLError("begin error", errmsg, true);
+		err = sqlite3_exec(db, "insert into card select * from imp.card", 0, 0, &errmsg);
+		if (err != SQLITE_OK)
+			throw SQLError("insert into card error", errmsg, true);
+		err = sqlite3_exec(db, "insert into keyword select * from imp.keyword", 0, 0, &errmsg);
+		if (err != SQLITE_OK)
+			throw SQLError("insert into keyword error", errmsg, true);
+		err = sqlite3_exec(db, "insert into illustration select * from imp.illustration", 0, 0, &errmsg);
+		if (err != SQLITE_OK)
+			throw SQLError("insert into illustration error", errmsg, true);
+		err = sqlite3_exec(db, "COMMIT", 0, 0, &errmsg);
+		if (err != SQLITE_OK)
+			throw SQLError("commmit error", errmsg, true);
+	} catch (const SQLError& ex)
+	{
+		std::cerr << ex.what() << std::endl;
+		err = sqlite3_exec(db, "ROLLBACK", 0, 0, &errmsg);
+		if (err != SQLITE_OK) 
+		{
+			Glib::ustring msg = Glib::ustring::compose("rollback error [%1]",
+													   ex.what());
+			err = sqlite3_exec(db, "DETACH DATABASE imp", 0, 0, &errmsg);
+			if (err != SQLITE_OK)
+				msg = Glib::ustring::compose("detach error [%1]", msg);
+			throw SQLError(msg.raw().c_str(), errmsg, true);
+		}
+	}
+	err = sqlite3_exec(db, "DETACH DATABASE imp", 0, 0, &errmsg);
+	if (err != SQLITE_OK)
+		throw SQLError("attach error", errmsg, true);
+	return true;
 }
 
 static const Glib::ustring SELECT("select card.name name, card.cost cost, group_concat(keyword.keyword, '-') keywords, points, text, flavortext, runner, lower(type) type, rarity ");

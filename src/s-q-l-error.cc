@@ -35,6 +35,13 @@ SQLError::SQLError(const char* msg, const char* why)
 	mwhat = msg + sep + why;
 }
 
+SQLError::SQLError(const char* msg, char* why, bool free)
+{
+	mwhat = msg + sep + why;
+	if (free)
+		sqlite3_free(why);
+}
+
 Glib::ustring SQLError::what() const
 {
 	return mwhat;
