@@ -370,6 +370,9 @@ void NrDeckbuilder::InitActions()
 	builder->get_widget("menuitem-search-adv", m);
 	if (m) m->signal_activate().connect
 		(sigc::bind<searchType>(sigc::mem_fun(*this, &NrDeckbuilder::SetCurrentSearch), advanced));
+	builder->get_widget("menuitem-import", m);
+	if (m) m->signal_activate().connect
+		(sigc::mem_fun(*this, &NrDeckbuilder::onImportInMasterClick));
 }
 
 void NrDeckbuilder::InitList(bool aDeck)
@@ -986,6 +989,40 @@ void NrDeckbuilder::SetCurrentSearch(searchType s)
 		UI.searchbox->trigger_tooltip_query();
 	}
 	mCurrentSearch = s;
+}
+
+void NrDeckbuilder::onImportInMasterClick()
+{
+	LOG("onImportInMasterClick");
+	Gtk::FileChooserDialog dialog(_("Please choose a file"),
+	                              Gtk::FILE_CHOOSER_ACTION_OPEN);
+	dialog.set_transient_for(*UI.main_win);
+	dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+	dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
+
+	Gtk::FileFilter filter_txt;
+	filter_txt.set_name("Databases Files");
+	filter_txt.add_pattern("*.db");
+	dialog.add_filter(filter_txt);
+
+	int result = dialog.run();
+	if (result != Gtk::RESPONSE_OK)
+		return;
+	Glib::RefPtr<Gio::File> file = dialog.get_file();
+	try
+	{
+		if (!file->query_exists())
+			throw Glib::FileError(Glib::FileError::FAILED, _("File not found"));
+		if (db->Import(file->get_path().c_str()))
+		{
+			db->Refresh();
+			LoadMaster();
+		}
+	}
+	catch (const Glib::Exception& ex) 
+	{
+		ErrMsg(ex);
+	}
 }
 
 #if defined WIN32 && defined NDEBUG

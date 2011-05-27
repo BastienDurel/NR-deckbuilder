@@ -106,16 +106,34 @@ NrDb* NrDb::Master()
 	return masterDb;
 }
 
+bool NrDb::Refresh()
+{
+	if (!List())
+		return false;
+	fullList.clear();
+	NrCard* card;
+	while ((card = Next()) != 0)
+	{
+		fullList.push_back(*card);
+		delete card;
+	}
+	EndList();
+	return true;
+}
+
 bool NrDb::Import(const char* aFile)
 {
 	int err;
 	char* errmsg = 0;
-	err = sqlite3_exec(db, "ATTACH DATABASE aFile AS imp", 0, 0, &errmsg);
+	Glib::ustring msg;
+	Glib::ustring attach = Glib::ustring::compose("ATTACH DATABASE '%1' AS imp",
+												  aFile);
+	err = sqlite3_exec(db, attach.raw().c_str(), 0, 0, &errmsg);
 	if (err != SQLITE_OK)
 		throw SQLError("attach error", errmsg, true);
 	try 
 	{
-		err = sqlite3_exec(db, "BEGIN_TRAN", 0, 0, &errmsg);
+		err = sqlite3_exec(db, "BEGIN", 0, 0, &errmsg);
 		if (err != SQLITE_OK)
 			throw SQLError("begin error", errmsg, true);
 		err = sqlite3_exec(db, "insert into card select * from imp.card", 0, 0, &errmsg);
@@ -132,11 +150,11 @@ bool NrDb::Import(const char* aFile)
 			throw SQLError("commmit error", errmsg, true);
 	} catch (const SQLError& ex)
 	{
-		std::cerr << ex.what() << std::endl;
+		msg = ex.what();
 		err = sqlite3_exec(db, "ROLLBACK", 0, 0, &errmsg);
 		if (err != SQLITE_OK) 
 		{
-			Glib::ustring msg = Glib::ustring::compose("rollback error [%1]",
+			msg = Glib::ustring::compose("rollback error [%1]",
 													   ex.what());
 			err = sqlite3_exec(db, "DETACH DATABASE imp", 0, 0, &errmsg);
 			if (err != SQLITE_OK)
@@ -147,6 +165,8 @@ bool NrDb::Import(const char* aFile)
 	err = sqlite3_exec(db, "DETACH DATABASE imp", 0, 0, &errmsg);
 	if (err != SQLITE_OK)
 		throw SQLError("attach error", errmsg, true);
+	if (msg.size() > 0)
+		throw SQLError(msg);
 	return true;
 }
 

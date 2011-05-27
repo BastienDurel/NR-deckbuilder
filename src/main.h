@@ -143,6 +143,8 @@ class NrDeckbuilder
 		void onAddClick();
 		void onDelClick();
 
+	    void onImportInMasterClick();
+
 		void onNumClick(const Glib::ustring &, const Glib::ustring&);
 		void onPrintClick(const Glib::ustring &);
 		void onSearchIconPressed(Gtk::EntryIconPosition icon_pos, const GdkEventButton* event);

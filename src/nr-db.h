@@ -56,6 +56,8 @@ public:
 	NrCardList& LoadDeck(const char* aFile, NrCardList& aList) throw (Glib::Exception);
 
 	static bool SaveDeck(const NrCardList& aList, const char* aFile);
+
+	bool Refresh();
 	
 protected:
 	sqlite3* db;

@@ -29,6 +29,8 @@ public:
 	SQLError(const char* msg, sqlite3* db);
 	SQLError(const char* msg, const char* why);
 	SQLError(const char* msg, char* why, bool free);
+	SQLError(const Glib::ustring& msg);
+	SQLError(const Glib::ustring& msg, const Glib::ustring& why);
 	virtual Glib::ustring what() const;
 	virtual ~SQLError() throw() {}
 
