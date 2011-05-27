@@ -913,7 +913,17 @@ void NrDeckbuilder::onAddClick()
 		else
 		{
 			it->instanceNum += 1;
-			RefreshDeck(); // TODO: Here we can do better with changeNum()
+			Gtk::TreeModel::iterator iter = deckModel->children().begin();
+			while (iter)
+			{
+				if ((*iter)[MasterColumns.m_col_name] == card.GetName())
+				{
+					changeNum(iter, it->instanceNum);
+					break;
+				}
+				++iter;
+			}
+			//RefreshDeck(); // TODO: Here we can do better with changeNum()
 		}
 	} catch (...) {}
 }
@@ -922,12 +932,18 @@ void NrDeckbuilder::onDelClick()
 {
 	try
 	{
-		NrCard& card = GetSelectedCard(UI.deckList, true);
-		card.instanceNum -= 1;
-		//RefreshDeck();
-		// Won't work !
-		Gtk::TreeModel::iterator iter = deckModel->get_iter(aPath);
-		changeNum(iter, card.instanceNum);
+		Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
+			UI.deckList->get_selection();
+		if (refTreeSelection)
+		{
+			Gtk::TreeModel::iterator iter = refTreeSelection->get_selected();
+			if (iter)
+			{
+				NrCard& card = GetSelectedCard(UI.deckList, true);
+				card.instanceNum -= 1;
+				changeNum(iter, card.instanceNum);
+			}
+		}
 	} catch (...) {}
 }
 
