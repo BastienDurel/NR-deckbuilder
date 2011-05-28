@@ -90,6 +90,8 @@ class NrDeckbuilder
 			
 			Gtk::TreeView* masterList;
 			Gtk::TreeView* deckList;
+
+			Tournament* tournament;
 		} UI;
 
 		NrDb* db;
@@ -144,6 +146,7 @@ class NrDeckbuilder
 		void onDelClick();
 
 	    void onImportInMasterClick();
+	    void onTounament();
 
 		void onNumClick(const Glib::ustring &, const Glib::ustring&);
 		void onPrintClick(const Glib::ustring &);

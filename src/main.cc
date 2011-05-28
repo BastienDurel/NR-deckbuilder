@@ -144,6 +144,7 @@ NrDeckbuilder::NrDeckbuilder(Gtk::Main& a) : kit(a), mIsDirty(false)
 	builder->get_widget("toolbuttondel", UI.toolbuttondel);
 	UI.toolbuttondel->signal_clicked().connect(sigc::mem_fun(*this, &NrDeckbuilder::onDelClick));
 	mCurrentSearch = all;
+	UI.tournament = 0;
 
 	db = NrDb::Master();
 	if (!db)
@@ -215,10 +216,6 @@ void NrDeckbuilder::Run()
 			RefreshDeck();
 			WritePDF(currentDeck, Gio::File::create_for_path("test.pdf"));
 		} catch (const Glib::Exception& ex) { std::cerr << ex.what() << std::endl; }
-#endif
-#if 0
-		Tournament t(kit);
-		t.Run();
 #endif
 #endif
 		if (!prefs.has_key("gui", "no_new_version_check") || !prefs.get_integer("gui", "no_new_version_check"))
@@ -373,6 +370,9 @@ void NrDeckbuilder::InitActions()
 	builder->get_widget("menuitem-import", m);
 	if (m) m->signal_activate().connect
 		(sigc::mem_fun(*this, &NrDeckbuilder::onImportInMasterClick));
+	builder->get_widget("menuitem-tournament", m);
+	if (m) m->signal_activate().connect
+		(sigc::mem_fun(*this, &NrDeckbuilder::onTounament));
 }
 
 void NrDeckbuilder::InitList(bool aDeck)
@@ -1023,6 +1023,13 @@ void NrDeckbuilder::onImportInMasterClick()
 	{
 		ErrMsg(ex);
 	}
+}
+
+void NrDeckbuilder::onTounament()
+{
+	if (!UI.tournament)
+		UI.tournament = new Tournament(kit);
+	UI.tournament->Run();
 }
 
 #if defined WIN32 && defined NDEBUG
