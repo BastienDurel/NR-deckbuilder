@@ -23,8 +23,9 @@
 #include "config.h"
 #endif
 
-#include "tournament.h"
+#include <set>
 #include <glibmm/i18n.h>
+#include "tournament.h"
 
 #if defined DEV_BUILD
 # if !defined UI_FILE
@@ -82,4 +83,38 @@ void Tournament::Run()
 	row[ParamCols.m_col_rares] = 3;
 	
 	kit.run(*tmanager);
+}
+
+NrCardList Tournament::SubList(const Glib::ustring& set, NrCard::Rarety rarety)
+{
+	NrCardList lset;
+	NrCard* card;
+	char c = 'C';
+	switch (rarety)
+	{
+		case NrCard::common: c = 'C'; break;
+		case NrCard::uncommon: c = 'U'; break;
+		case NrCard::rare: c = 'R'; break;
+		case NrCard::vitale: c = 'V'; break;
+	}
+	db.List("select card.name from illustration, card where illustration.card = card.name and illustration.set = '" + set + "' and rarety = " + r, true);
+	while (card = db.Next())
+	{
+		lset.push_back(*card);
+	}
+	db.EndList();
+	return lset;
+}
+
+bool Tournament::CreateSealed(const Glib::RefPtr<Gio::File>& aNrdb,
+							  const Glib::RefPtr<Gio::File>& aText,
+							  const Glib::RefPtr<Gio::File>& aPDF)
+{
+	for (int b = 0; b < sealedConfig.size(); ++b) 
+	{
+		NrCardList lrset = SubList(sealedConfig[b].set, NrCard::rare);
+		NrCardList luset = SubList(sealedConfig[b].set, NrCard::uncommon);
+		NrCardList lcset = SubList(sealedConfig[b].set, NrCard::common);
+		NrCardList lvset = SubList(sealedConfig[b].set, NrCard::vitale);
+	}
 }

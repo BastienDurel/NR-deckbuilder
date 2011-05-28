@@ -51,7 +51,7 @@ class DeckParamsColumns : public Gtk::TreeModelColumnRecord
 class Tournament
 {
 public:
-	Tournament(Gtk::Main& k) : kit(k) {}
+	Tournament(Gtk::Main& k, NrDb& d) : kit(k), db(d) {}
 
 	void Run();
 
@@ -75,6 +75,18 @@ public:
 #endif
 	static int Random(int Tmax) { return Random(0, Tmax); }
 
+	typedef struct { 
+		Glib::ustring set;
+		guint rares;
+		guint uncommons;
+		guint commons;
+		guint vitales;
+	} BoosterConfig;
+
+	bool CreateSealed(const Glib::RefPtr<Gio::File>& aNrdb,
+					  const Glib::RefPtr<Gio::File>& aText,
+					  const Glib::RefPtr<Gio::File>& aPDF);
+
 protected:
 	Gtk::Main& kit;
 	Glib::RefPtr<Gtk::Builder> builder;
@@ -82,6 +94,11 @@ protected:
 
 	DeckParamsColumns ParamCols;
 	Glib::RefPtr<Gtk::ListStore> refParamCols;
+
+	std::vector<BoosterConfig> sealedConfig;
+	NrDb& db;
+
+	NrCardList SubList(const Glib::ustring& set, NrCard::Rarety rarety);
 
 private:
 

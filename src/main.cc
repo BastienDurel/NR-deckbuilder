@@ -1028,7 +1028,7 @@ void NrDeckbuilder::onImportInMasterClick()
 void NrDeckbuilder::onTounament()
 {
 	if (!UI.tournament)
-		UI.tournament = new Tournament(kit);
+		UI.tournament = new Tournament(kit, *db);
 	UI.tournament->Run();
 }
 
