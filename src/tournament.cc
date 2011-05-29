@@ -128,7 +128,9 @@ static void PickCards(NrCardList& to, NrCardList& from, guint nb)
 	{
 		int k = Tournament::Random(p->size() - 1);
 		to.push_back((*p)[k]);
-		p->erase(k);
+		NrCardList::iterator it = p->begin();
+		while (k--) ++it;
+		p->erase(it);
 		if (p == &corpo)
 			p = &runner;
 		else
