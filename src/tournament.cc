@@ -154,5 +154,6 @@ bool Tournament::CreateSealed(const Glib::RefPtr<Gio::File>& aNrdb,
 		NrCardList lvset = SubList(sealedConfig[b].set, NrCard::vitale);
 		PickCards(tmp, lvset, sealedConfig[b].vitales);
 	}
+	WritePDF(tmp, aPdf);
 	// TODO...
 }
