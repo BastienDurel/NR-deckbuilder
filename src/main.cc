@@ -694,21 +694,26 @@ void NrDeckbuilder::onTextExportClick()
 			file->remove();
 	}
 
-	Glib::RefPtr<Gio::FileOutputStream> lOut;
 	try 
 	{
-		lOut = file->create_file(Gio::FILE_CREATE_REPLACE_DESTINATION);
-		lOut->write(_("Number\tCard Name\tPrint\n"));
-		for (NrCardList::iterator it = currentDeck.begin();
-		     it != currentDeck.end(); ++it)
-		{
-			lOut->write(Glib::ustring::compose("%1\t%2\t%3\n", it->instanceNum,
-			                                   it->GetName(), it->print ? "*" : ""));
-		}
+		TextExport(currentDeck, file);
 	}
 	catch (const Glib::Exception& ex) 
 	{
 		ErrMsg(ex);
+	}
+}
+
+void TextExport(const NrCardList& list, const Glib::RefPtr<Gio::File>& file)
+{
+	Glib::RefPtr<Gio::FileOutputStream> lOut;
+	lOut = file->create_file(Gio::FILE_CREATE_REPLACE_DESTINATION);
+	lOut->write(_("Number\tCard Name\tPrint\n"));
+	for (NrCardList::const_iterator it = list.begin(); it != list.end(); ++it)
+	{
+		lOut->write(Glib::ustring::compose("%1\t%2\t%3\n", it->instanceNum,
+										   it->GetName(),
+										   it->print ? "*" : ""));
 	}
 }
 
