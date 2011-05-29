@@ -166,7 +166,5 @@ class NrDeckbuilder
 		
 };
 
-extern bool WritePDF(NrCardList& list, Glib::RefPtr<Gio::File> file);
-
 #endif
 

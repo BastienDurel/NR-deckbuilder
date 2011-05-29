@@ -28,4 +28,6 @@
 #define LOGN(x) std::cerr << x
 #endif
 
+extern bool WritePDF(NrCardList& list, Glib::RefPtr<Gio::File> file);
+
 #endif
