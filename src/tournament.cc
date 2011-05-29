@@ -128,10 +128,14 @@ static void PickCards(NrCardList& to, NrCardList& from, guint nb)
 	while (nb--)
 	{
 		int k = Tournament::Random(p->size() - 1);
-		to.push_back((*p)[k]);
-		NrCardList::iterator it = p->begin();
-		while (k--) ++it;
-		p->erase(it);
+		NrCardList::iterator itt = std::find(to.begin(), to.end(), (*p)[k]);
+		if (itt == to.end())
+			to.push_back((*p)[k]);
+		else
+			itt->instanceNum += 1;
+		NrCardList::iterator itd = p->begin();
+		while (k--) ++itd;
+		p->erase(itd);
 		if (p == &corpo)
 			p = &runner;
 		else
