@@ -37,6 +37,11 @@
 # define UI_FILE PACKAGE_DATA_DIR"/nr_deckbuilder/ui/nr_sealed.ui"
 #endif
 
+const Tournament::BoosterConfig baseStarter = { "Netrunner Limited", 4, 16, 50, 30 };
+const Tournament::BoosterConfig baseBooster = { "Netrunner Limited", 2, 4, 9, 0 };
+const Tournament::BoosterConfig protetusBooster = { "Netrunner ", 2, 3, 7, 0 };
+const Tournament::BoosterConfig classicBooster = { "Netrunner ", 1, 0, 4, 0 };
+
 void Tournament::Run()
 {
 	builder = Gtk::Builder::create_from_file(UI_FILE);
@@ -97,7 +102,7 @@ NrCardList Tournament::SubList(const Glib::ustring& set, NrCard::Rarety rarety)
 		case NrCard::rare: c = 'R'; break;
 		case NrCard::vitale: c = 'V'; break;
 	}
-	db.List("select card.name from illustration, card where illustration.card = card.name and illustration.set = '" + set + "' and rarety = " + r, true);
+	db.ListExpr("select distinct card.name from illustration, card where illustration.card = card.name and illustration.version = '" + set + "' and rarity = '" + c + "'");
 	while (card = db.Next())
 	{
 		lset.push_back(*card);
@@ -106,15 +111,46 @@ NrCardList Tournament::SubList(const Glib::ustring& set, NrCard::Rarety rarety)
 	return lset;
 }
 
+static void PickCards(NrCardList& to, NrCardList& from, guint nb)
+{
+	NrCardList runner, corpo;
+	NrCardList* p = 0;
+	if (nb % 2)
+	{
+		if (Tournament::Random(1))
+			p = &runner;
+		else
+			p = &corpo;
+	}
+	else
+		p = &corpo;
+	while (nb--)
+	{
+		int k = Tournament::Random(p->size() - 1);
+		to.push_back((*p)[k]);
+		p->erase(k);
+		if (p == &corpo)
+			p = &runner;
+		else
+			p = &corpo;
+	}
+}
+
 bool Tournament::CreateSealed(const Glib::RefPtr<Gio::File>& aNrdb,
 							  const Glib::RefPtr<Gio::File>& aText,
 							  const Glib::RefPtr<Gio::File>& aPDF)
 {
+	NrCardList tmp;
 	for (int b = 0; b < sealedConfig.size(); ++b) 
 	{
 		NrCardList lrset = SubList(sealedConfig[b].set, NrCard::rare);
+		PickCards(tmp, lrset, sealedConfig[b].rares);
 		NrCardList luset = SubList(sealedConfig[b].set, NrCard::uncommon);
+		PickCards(tmp, luset, sealedConfig[b].uncommons);
 		NrCardList lcset = SubList(sealedConfig[b].set, NrCard::common);
+		PickCards(tmp, lcset, sealedConfig[b].commons);
 		NrCardList lvset = SubList(sealedConfig[b].set, NrCard::vitale);
+		PickCards(tmp, lvset, sealedConfig[b].vitales);
 	}
+	// TODO...
 }

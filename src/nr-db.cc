@@ -232,6 +232,30 @@ bool NrDb::List(const Glib::ustring& aFilter, bool adv)
 	return false;
 }
 
+
+bool NrDb::ListExpr(const Glib::ustring& aExpr)
+{
+	if (!db) return false;
+	if (aExpr.size() == 0)
+		return List();
+
+	if (listStmt)
+	{ /* Clean previous */
+		EndList();
+	}
+
+	/* start query */
+	listSql = SELECT + FROM + WHERE + " and name in (" + aExpr + ")" + GROUP;
+	LOG(listSql);
+	int err = sqlite3_prepare_v2(db, listSql.c_str(), listSql.bytes() + 1, &listStmt, 0);
+	if (err != SQLITE_OK)
+	{
+		std::cerr << "Error in SQL(" << listSql << "): " << sqlite3_errmsg(db) << std::endl;
+		return false;
+	}
+	return false;
+}
+
 NrCard* NrDb::Next()
 {
 	const int EXPECTED_COLUMNS = 9;

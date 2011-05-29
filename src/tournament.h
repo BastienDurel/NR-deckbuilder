@@ -56,8 +56,8 @@ public:
 	void Run();
 
 #if defined HAVE_BOOST_RANDOM
-	static boost::mt19937 rng;
 	static int Random(int Tmin, int Tmax) {
+		static boost::mt19937 rng;
 		boost::uniform_int<> die_range(Tmin, Tmax);
 		boost::variate_generator<boost::mt19937&, boost::uniform_int<> > die(rng, die_range);
 		return die();
@@ -82,6 +82,11 @@ public:
 		guint commons;
 		guint vitales;
 	} BoosterConfig;
+
+	static const BoosterConfig baseStarter;
+	static const BoosterConfig baseBooster;
+	static const BoosterConfig protetusBooster;
+	static const BoosterConfig classicBooster;
 
 	bool CreateSealed(const Glib::RefPtr<Gio::File>& aNrdb,
 					  const Glib::RefPtr<Gio::File>& aText,

@@ -34,6 +34,7 @@ public:
 
 	bool List();
 	bool List(const Glib::ustring& aFilter, bool adv=false);
+	bool ListExpr(const Glib::ustring& aExpr);
 	void EndList();
 	int ListCount() const { return listCount; }
 	NrCard* Next();
