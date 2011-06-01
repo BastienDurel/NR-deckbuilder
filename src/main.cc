@@ -115,23 +115,32 @@ NrDeckbuilder::NrDeckbuilder(Gtk::Main& a) : kit(a), mIsDirty(false)
 {
 	//Load the Glade file and instantiate its widgets:	
 	builder = Gtk::Builder::create_from_file(UI_FILE);
-	main_win = 0;
-	builder->get_widget("main_window", main_win);
-	img = 0;
-	builder->get_widget("image", img);
-	paned = 0;
-	builder->get_widget("vpaned1", paned);
+	UI.main_win = 0;
+	builder->get_widget("main_window", UI.main_win);
+	UI.img = 0;
+	builder->get_widget("image", UI.img);
+	UI.paned = 0;
+	builder->get_widget("vpaned1", UI.paned);
 	masterModel = Gtk::ListStore::create(MasterColumns);
-    builder->get_widget("mastertreeview", masterList);
+	UI.masterList = 0;
+    builder->get_widget("mastertreeview", UI.masterList);
 	deckModel = Gtk::ListStore::create(DeckColumns);
-	builder->get_widget("decktreeview", deckList);
-	searchbox = 0;
-	builder->get_widget("searchentry", searchbox);
-	searchbox->signal_icon_press().connect(sigc::mem_fun(*this, &NrDeckbuilder::onSearchIconPressed));
-	searchbox->signal_activate().connect(sigc::mem_fun(*this, &NrDeckbuilder::onSearchActivated));
-	deckstatusbar = 0;
-	builder->get_widget("deckstatusbar", deckstatusbar);
+	UI.deckList = 0;
+	builder->get_widget("decktreeview", UI.deckList);
+	UI.searchbox = 0;
+	builder->get_widget("searchentry", UI.searchbox);
+	UI.searchbox->signal_icon_press().connect(sigc::mem_fun(*this, &NrDeckbuilder::onSearchIconPressed));
+	UI.searchbox->signal_activate().connect(sigc::mem_fun(*this, &NrDeckbuilder::onSearchActivated));
+	UI.deckstatusbar = 0;
+	builder->get_widget("deckstatusbar", UI.deckstatusbar);
+	UI.toolbuttonadd = 0;
+	builder->get_widget("toolbuttonadd", UI.toolbuttonadd);
+	UI.toolbuttonadd->signal_clicked().connect(sigc::mem_fun(*this, &NrDeckbuilder::onAddClick));
+	UI.toolbuttondel = 0;
+	builder->get_widget("toolbuttondel", UI.toolbuttondel);
+	UI.toolbuttondel->signal_clicked().connect(sigc::mem_fun(*this, &NrDeckbuilder::onDelClick));
 	mCurrentSearch = all;
+	UI.tournament = 0;
 
 	db = NrDb::Master();
 	if (!db)
@@ -153,9 +162,9 @@ NrDeckbuilder::NrDeckbuilder(Gtk::Main& a) : kit(a), mIsDirty(false)
 	}
 	prefs.load_from_file(prefs_file->get_path());
 	if (prefs.has_key("gui", "master_pos"))
-		paned->set_position(prefs.get_integer("gui", "master_pos"));
+		UI.paned->set_position(prefs.get_integer("gui", "master_pos"));
 	if (prefs.has_key("gui", "main_h") && prefs.has_key("gui", "main_w"))
-		main_win->resize(prefs.get_integer("gui", "main_w"), prefs.get_integer("gui", "main_h"));
+		UI.main_win->resize(prefs.get_integer("gui", "main_w"), prefs.get_integer("gui", "main_h"));
 	if (prefs.has_key("files", "last_deck"))
 	{
 		currentDeckFile = Gio::File::create_for_path(prefs.get_string("files", "last_deck"));
@@ -170,9 +179,9 @@ NrDeckbuilder::NrDeckbuilder(Gtk::Main& a) : kit(a), mIsDirty(false)
 
 NrDeckbuilder::~NrDeckbuilder()
 {
-	prefs.set_integer("gui", "master_pos", paned->get_position());
+	prefs.set_integer("gui", "master_pos", UI.paned->get_position());
 	int w, h;
-	main_win->get_size(w, h);
+	UI.main_win->get_size(w, h);
 	prefs.set_integer("gui", "main_w", w);
 	prefs.set_integer("gui", "main_h", h);
 	if (currentDeckFile)
@@ -186,7 +195,7 @@ void NrDeckbuilder::Run()
 {
 	//NrCard* s = NrCard::Sample();
 	
-	if (main_win)
+	if (UI.main_win)
 	{	
 		InitList(false);
 		InitList(true);
@@ -203,10 +212,6 @@ void NrDeckbuilder::Run()
 			RefreshDeck();
 			WritePDF(currentDeck, Gio::File::create_for_path("test.pdf"));
 		} catch (const Glib::Exception& ex) { std::cerr << ex.what() << std::endl; }
-#endif
-#if 0
-		Tournament t(kit);
-		t.Run();
 #endif
 #endif
 		if (!prefs.has_key("gui", "no_new_version_check") || !prefs.get_integer("gui", "no_new_version_check"))
@@ -245,7 +250,7 @@ void NrDeckbuilder::Run()
 		}
 		catch (const Glib::Exception& ex) { LOG(ex.what()); ex; }
 
-		kit.run(*main_win);
+		kit.run(*UI.main_win);
 	}
 }
 
@@ -358,6 +363,12 @@ void NrDeckbuilder::InitActions()
 	builder->get_widget("menuitem-search-adv", m);
 	if (m) m->signal_activate().connect
 		(sigc::bind<searchType>(sigc::mem_fun(*this, &NrDeckbuilder::SetCurrentSearch), advanced));
+	builder->get_widget("menuitem-import", m);
+	if (m) m->signal_activate().connect
+		(sigc::mem_fun(*this, &NrDeckbuilder::onImportInMasterClick));
+	builder->get_widget("menuitem-tournament", m);
+	if (m) m->signal_activate().connect
+		(sigc::mem_fun(*this, &NrDeckbuilder::onTounament));
 }
 
 void NrDeckbuilder::InitList(bool aDeck)
@@ -404,12 +415,12 @@ void NrDeckbuilder::InitList(bool aDeck)
 
 void NrDeckbuilder::LoadImage(NrCard& card)
 {
-	if (img)
+	if (UI.img)
 	{
 		if (card.GetImage())
-			img->set(card.GetImage());
+			UI.img->set(card.GetImage());
 		else 
-			img->set(Gtk::Stock::MISSING_IMAGE, Gtk::ICON_SIZE_LARGE_TOOLBAR);
+			UI.img->set(Gtk::Stock::MISSING_IMAGE, Gtk::ICON_SIZE_LARGE_TOOLBAR);
 	}
 }
 
@@ -417,8 +428,8 @@ void NrDeckbuilder::LoadMaster()
 {
 	LoadList(db->FullBegin(), db->FullEnd());
 	Gtk::TreeModel::iterator iter = masterModel->children().begin();
-	if (iter && masterList)
-		masterList->get_selection()->select(iter);
+	if (iter && UI.masterList)
+		UI.masterList->get_selection()->select(iter);
 }
 
 bool IsZero(const NrCard& a) { return a.instanceNum == 0; }
@@ -426,7 +437,7 @@ bool IsZero(const NrCard& a) { return a.instanceNum == 0; }
 void NrDeckbuilder::RefreshDeck()
 {
 	Glib::ustring selectedName;
-	Glib::RefPtr<Gtk::TreeSelection> refTreeSelection = deckList->get_selection();
+	Glib::RefPtr<Gtk::TreeSelection> refTreeSelection = UI.deckList->get_selection();
 	Gtk::TreeModel::iterator iter = refTreeSelection->get_selected();
 	if (iter) selectedName = (*iter)[MasterColumns.m_col_name];
 	NrCardList::iterator lit = std::remove_if(currentDeck.begin(), currentDeck.end(), &IsZero);
@@ -438,7 +449,7 @@ void NrDeckbuilder::RefreshDeck()
 		for (iter = deckModel->children().begin(); iter != deckModel->children().end(); ++iter)
 			if ((*iter)[MasterColumns.m_col_name] == selectedName)
 			{
-				deckList->get_selection()->select(iter);
+				UI.deckList->get_selection()->select(iter);
 				break;
 			}
 	}
@@ -449,9 +460,9 @@ void NrDeckbuilder::LoadList(NrCardList::const_iterator lbegin, NrCardList::cons
 {
 	Gtk::TreeView* list = 0;
 	if (aDeck)
-	    list = deckList;
+	    list = UI.deckList;
     else
-	    list = masterList;
+	    list = UI.masterList;
     if (list)
 	{
 		Glib::RefPtr<Gtk::ListStore> refListStore;
@@ -542,9 +553,14 @@ void NrDeckbuilder::SaveDeck()
 
 void NrDeckbuilder::onSelect(Gtk::TreeView* aTreeView)
 {
+	if (aTreeView == UI.deckList)
+	{
+		bool lIsSelected = aTreeView->get_selection()->get_selected();
+		UI.toolbuttondel->set_sensitive(lIsSelected);
+	}
 	try
 	{
-		if (!aTreeView->get_selection()->get_selected())
+		if (!aTreeView->get_selection()->get_selected()) 
 			return;
 		NrCard& card = GetSelectedCard(aTreeView);
 		if (!card.GetImage()) 
@@ -579,7 +595,7 @@ void NrDeckbuilder::onOpenClick()
 	
 	Gtk::FileChooserDialog dialog(_("Please choose a file"),
 	                              Gtk::FILE_CHOOSER_ACTION_OPEN);
-	dialog.set_transient_for(*main_win);
+	dialog.set_transient_for(*UI.main_win);
 	dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
 	dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
 
@@ -613,7 +629,7 @@ void NrDeckbuilder::onSaveAsClick()
 {
 	Gtk::FileChooserDialog dialog(_("Please choose a file"),
 	                              Gtk::FILE_CHOOSER_ACTION_SAVE);
-	dialog.set_transient_for(*main_win);
+	dialog.set_transient_for(*UI.main_win);
 	dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
 	dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
 
@@ -649,7 +665,7 @@ void NrDeckbuilder::onTextExportClick()
 {
 	Gtk::FileChooserDialog dialog(_("Please choose a file"),
 	                              Gtk::FILE_CHOOSER_ACTION_SAVE);
-	dialog.set_transient_for(*main_win);
+	dialog.set_transient_for(*UI.main_win);
 	dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
 	dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
 
@@ -674,17 +690,9 @@ void NrDeckbuilder::onTextExportClick()
 			file->remove();
 	}
 
-	Glib::RefPtr<Gio::FileOutputStream> lOut;
 	try 
 	{
-		lOut = file->create_file(Gio::FILE_CREATE_REPLACE_DESTINATION);
-		lOut->write(_("Number\tCard Name\tPrint\n"));
-		for (NrCardList::iterator it = currentDeck.begin();
-		     it != currentDeck.end(); ++it)
-		{
-			lOut->write(Glib::ustring::compose("%1\t%2\t%3\n", it->instanceNum,
-			                                   it->GetName(), it->print ? "*" : ""));
-		}
+		TextExport(currentDeck, file);
 	}
 	catch (const Glib::Exception& ex) 
 	{
@@ -692,11 +700,24 @@ void NrDeckbuilder::onTextExportClick()
 	}
 }
 
+void TextExport(const NrCardList& list, const Glib::RefPtr<Gio::File>& file)
+{
+	Glib::RefPtr<Gio::FileOutputStream> lOut;
+	lOut = file->create_file(Gio::FILE_CREATE_REPLACE_DESTINATION);
+	lOut->write(_("Number\tCard Name\tPrint\n"));
+	for (NrCardList::const_iterator it = list.begin(); it != list.end(); ++it)
+	{
+		lOut->write(Glib::ustring::compose("%1\t%2\t%3\n", it->instanceNum,
+										   it->GetName(),
+										   it->print ? "*" : ""));
+	}
+}
+
 void NrDeckbuilder::onPDFExportClick()
 {
 	Gtk::FileChooserDialog dialog(_("Please choose a file"),
 	                              Gtk::FILE_CHOOSER_ACTION_SAVE);
-	dialog.set_transient_for(*main_win);
+	dialog.set_transient_for(*UI.main_win);
 	dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
 	dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
 
@@ -732,30 +753,8 @@ void NrDeckbuilder::onPDFExportClick()
 
 void NrDeckbuilder::onActivate(const Gtk::TreePath& aPath, Gtk::TreeViewColumn* const& c, bool aDeck, Gtk::TreeView* aTreeView)
 {
-	if (!aDeck) try
-	{
-		NrCard& card = GetSelectedCard(aTreeView);
-		NrCardList::iterator it = std::find(currentDeck.begin(), currentDeck.end(), card);
-		if (it == currentDeck.end())
-		{
-			card.instanceNum = 1;
-			currentDeck.push_back(card);
-			RefreshDeck();
-		}
-		else
-		{
-			it->instanceNum += 1;
-			RefreshDeck(); // TODO: Here we can do better with changeNum()
-		}
-	} catch (...) {}
-	else try
-	{
-		NrCard& card = GetSelectedCard(aTreeView, true);
-		card.instanceNum -= 1;
-		//RefreshDeck();
-		Gtk::TreeModel::iterator iter = deckModel->get_iter(aPath);
-		changeNum(iter, card.instanceNum);
-	} catch (...) {}
+	if (!aDeck) onAddClick();
+	else onDelClick();
 }
 
 void NrDeckbuilder::changeNum(Gtk::TreeModel::iterator& iter, gint num)
@@ -827,7 +826,7 @@ void NrDeckbuilder::onSearchIconPressed(Gtk::EntryIconPosition pos,
 			break;
 		}
 		case Gtk::ENTRY_ICON_SECONDARY:
-			searchbox->set_text("");
+			UI.searchbox->set_text("");
 			break;
 	}
 }
@@ -869,13 +868,13 @@ void NrDeckbuilder::UpdateDeckStatus()
 		msg = Glib::ustring::compose(_("Count: %1 - Agenda points: %2"), count, agenda);
 	else
 		msg = Glib::ustring::compose(_("Count: %1"), count);
-	deckstatusbar->push(msg);
+	UI.deckstatusbar->push(msg);
 }
 
 void NrDeckbuilder::onSearchActivated()
 {
-	LOG("onSearchActivated: " << searchbox->get_text());
-	if (searchbox->get_text().size() == 0)
+	LOG("onSearchActivated: " << UI.searchbox->get_text());
+	if (UI.searchbox->get_text().size() == 0)
 	{
 		LoadMaster();
 		return;
@@ -884,63 +883,154 @@ void NrDeckbuilder::onSearchActivated()
 	{
 		case name:
 			FilterMaster(Glib::ustring::compose("name like '%%%1%%'",
-			                                    searchbox->get_text()));
+			                                    UI.searchbox->get_text()));
 			break;
 		case type:
 			FilterMaster(Glib::ustring::compose("type like '%1'",
-			                                    searchbox->get_text()));
+			                                    UI.searchbox->get_text()));
 			break;
 		case keywords:
 			FilterMaster(Glib::ustring::compose("keywords like '%1' or keywords like '%%-%1-%%' or keywords like '%1-%%' or keywords like '%%-%1'",
-			                                    searchbox->get_text()));
+			                                    UI.searchbox->get_text()));
 			break;
 		case text:
 			FilterMaster(Glib::ustring::compose("text like '%%%1%%'",
-			                                    searchbox->get_text()));
+			                                    UI.searchbox->get_text()));
 			break;
 		case all:
 			FilterMaster(Glib::ustring::compose("name like '%%%1%%' or type like '%1' or keywords like '%1' or keywords like '%%-%1-%%' or keywords like '%1-%%' or keywords like '%%-%1' or text like '%%%1%%'",
-			                                    searchbox->get_text()));
+			                                    UI.searchbox->get_text()));
 			break;
 		case advanced:
-			FilterMaster(searchbox->get_text(), true);
+			FilterMaster(UI.searchbox->get_text(), true);
 			break;
 	}
 }
+
+void NrDeckbuilder::onAddClick()
+{
+	try
+	{
+		NrCard& card = GetSelectedCard(UI.masterList);
+		NrCardList::iterator it = std::find(currentDeck.begin(), currentDeck.end(), card);
+		if (it == currentDeck.end())
+		{
+			card.instanceNum = 1;
+			currentDeck.push_back(card);
+			RefreshDeck();
+		}
+		else
+		{
+			it->instanceNum += 1;
+			Gtk::TreeModel::iterator iter = deckModel->children().begin();
+			while (iter)
+			{
+				if ((*iter)[MasterColumns.m_col_name] == card.GetName())
+				{
+					changeNum(iter, it->instanceNum);
+					break;
+				}
+				++iter;
+			}
+			//RefreshDeck(); // TODO: Here we can do better with changeNum()
+		}
+	} catch (...) {}
+}
+
+void NrDeckbuilder::onDelClick()
+{
+	try
+	{
+		Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
+			UI.deckList->get_selection();
+		if (refTreeSelection)
+		{
+			Gtk::TreeModel::iterator iter = refTreeSelection->get_selected();
+			if (iter)
+			{
+				NrCard& card = GetSelectedCard(UI.deckList, true);
+				card.instanceNum -= 1;
+				changeNum(iter, card.instanceNum);
+			}
+		}
+	} catch (...) {}
+}
+
 
 void NrDeckbuilder::SetCurrentSearch(searchType s)
 {
 	LOG("SetCurrentSearch(" << (int)s << ")");
 	if (mCurrentSearch != s)
 	{
-		searchbox->set_text("");
+		UI.searchbox->set_text("");
 		switch (s)
 		{
 			case name:
-				searchbox->set_tooltip_text(_("Card name contains"));
+				UI.searchbox->set_tooltip_text(_("Card name contains"));
 				break;
 			case type:
-				searchbox->set_tooltip_text(_("Card type is"));
+				UI.searchbox->set_tooltip_text(_("Card type is"));
 				break;
 			case keywords:
-				searchbox->set_tooltip_text(_("Card contains keyword"));
+				UI.searchbox->set_tooltip_text(_("Card contains keyword"));
 				break;
 			case text:
-				searchbox->set_tooltip_text(_("Card text contains"));
+				UI.searchbox->set_tooltip_text(_("Card text contains"));
 				break;
 			case all:
-				searchbox->set_tooltip_text(_("Card name, keywords, or text contains"));
+				UI.searchbox->set_tooltip_text(_("Card name, keywords, or text contains"));
 				break;
 			case advanced:
-				searchbox->set_tooltip_text(_("Enter an SQL expression to select cards"));
+				UI.searchbox->set_tooltip_text(_("Enter an SQL expression to select cards"));
 				break;
 			default:
-				searchbox->set_tooltip_text("");
+				UI.searchbox->set_tooltip_text("");
 				break;
 		}
-		searchbox->trigger_tooltip_query();
+		UI.searchbox->trigger_tooltip_query();
 	}
 	mCurrentSearch = s;
+}
+
+void NrDeckbuilder::onImportInMasterClick()
+{
+	LOG("onImportInMasterClick");
+	Gtk::FileChooserDialog dialog(_("Please choose a file"),
+	                              Gtk::FILE_CHOOSER_ACTION_OPEN);
+	dialog.set_transient_for(*UI.main_win);
+	dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+	dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
+
+	Gtk::FileFilter filter_txt;
+	filter_txt.set_name("Databases Files");
+	filter_txt.add_pattern("*.db");
+	dialog.add_filter(filter_txt);
+
+	int result = dialog.run();
+	if (result != Gtk::RESPONSE_OK)
+		return;
+	Glib::RefPtr<Gio::File> file = dialog.get_file();
+	try
+	{
+		if (!file->query_exists())
+			throw Glib::FileError(Glib::FileError::FAILED, _("File not found"));
+		if (db->Import(file->get_path().c_str()))
+		{
+			db->Refresh();
+			LoadMaster();
+		}
+	}
+	catch (const Glib::Exception& ex) 
+	{
+		ErrMsg(ex);
+	}
+}
+
+void NrDeckbuilder::onTounament()
+{
+	if (!UI.tournament)
+		UI.tournament = new Tournament(kit, *db);
+	UI.tournament->Run();
 }
 
 #if defined WIN32 && defined NDEBUG

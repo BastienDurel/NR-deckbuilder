@@ -77,21 +77,30 @@ class NrDeckbuilder
 		Glib::RefPtr<Gio::File> prefs_file;
 	
 		Glib::RefPtr<Gtk::Builder> builder;
-		Gtk::Window* main_win;
-		Gtk::Image* img;
-		Gtk::VPaned* paned;
-		Gtk::Entry* searchbox;
-		Gtk::Statusbar* deckstatusbar;
+
+		struct s_comp {
+			Gtk::ToolButton* toolbuttonadd;
+			Gtk::ToolButton* toolbuttondel;
+		
+			Gtk::Window* main_win;
+			Gtk::Image* img;
+			Gtk::VPaned* paned;
+			Gtk::Entry* searchbox;
+			Gtk::Statusbar* deckstatusbar;
+			
+			Gtk::TreeView* masterList;
+			Gtk::TreeView* deckList;
+
+			Tournament* tournament;
+		} UI;
 
 		NrDb* db;
 
 		CardListColumns MasterColumns;
 		Glib::RefPtr<Gtk::ListStore> masterModel;
-		Gtk::TreeView* masterList;
 	
 		DeckListColumns DeckColumns;
 		Glib::RefPtr<Gtk::ListStore> deckModel;
-		Gtk::TreeView* deckList;
 
 		NrCardList currentDeck;
 		Glib::RefPtr<Gio::File> currentDeckFile;
@@ -133,6 +142,12 @@ class NrDeckbuilder
 		void onTextExportClick();
 		void onPDFExportClick();
 
+		void onAddClick();
+		void onDelClick();
+
+	    void onImportInMasterClick();
+	    void onTounament();
+
 		void onNumClick(const Glib::ustring &, const Glib::ustring&);
 		void onPrintClick(const Glib::ustring &);
 		void onSearchIconPressed(Gtk::EntryIconPosition icon_pos, const GdkEventButton* event);
@@ -150,8 +165,6 @@ class NrDeckbuilder
 
 		
 };
-
-extern bool WritePDF(NrCardList& list, Glib::RefPtr<Gio::File> file);
 
 #endif
 

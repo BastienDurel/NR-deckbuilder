@@ -1,3 +1,11 @@
+nr-deckbuilder (0.3) squeeze; urgency=low
+
+  * Search box for master list
+  * Preferences in home directory
+  * Deck stats
+
+ -- Bastien Durel <bastien@durel.org>  Sun, 22 May 2011 20:47:46 +0200
+
 nr-deckbuilder (0.2) unstable; urgency=low
 
   * Initial Release.

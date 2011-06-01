@@ -23,8 +23,10 @@
 #include "config.h"
 #endif
 
-#include "tournament.h"
+#include <set>
 #include <glibmm/i18n.h>
+#include "tournament.h"
+#include "uti.h"
 
 #if defined DEV_BUILD
 # if !defined UI_FILE
@@ -35,6 +37,11 @@
 #else
 # define UI_FILE PACKAGE_DATA_DIR"/nr_deckbuilder/ui/nr_sealed.ui"
 #endif
+
+const Tournament::BoosterConfig baseStarter = { "Netrunner Limited", 4, 16, 50, 30 };
+const Tournament::BoosterConfig baseBooster = { "Netrunner Limited", 2, 4, 9, 0 };
+const Tournament::BoosterConfig protetusBooster = { "Netrunner ", 2, 3, 7, 0 };
+const Tournament::BoosterConfig classicBooster = { "Netrunner ", 1, 0, 4, 0 };
 
 void Tournament::Run()
 {
@@ -82,4 +89,80 @@ void Tournament::Run()
 	row[ParamCols.m_col_rares] = 3;
 	
 	kit.run(*tmanager);
+}
+
+NrCardList Tournament::SubList(const Glib::ustring& set, NrCard::Rarety rarety)
+{
+	NrCardList lset;
+	NrCard* card;
+	char c = 'C';
+	switch (rarety)
+	{
+		case NrCard::common: c = 'C'; break;
+		case NrCard::uncommon: c = 'U'; break;
+		case NrCard::rare: c = 'R'; break;
+		case NrCard::vitale: c = 'V'; break;
+	}
+	db.ListExpr("select distinct card.name from illustration, card where illustration.card = card.name and illustration.version = '" + set + "' and rarity = '" + c + "'");
+	while (card = db.Next())
+	{
+		lset.push_back(*card);
+	}
+	db.EndList();
+	return lset;
+}
+
+static void PickCards(NrCardList& to, NrCardList& from, guint nb)
+{
+	NrCardList runner, corpo;
+	NrCardList* p = 0;
+	if (nb % 2)
+	{
+		if (Tournament::Random(1))
+			p = &runner;
+		else
+			p = &corpo;
+	}
+	else
+		p = &corpo;
+	while (nb--)
+	{
+		int k = Tournament::Random(p->size() - 1);
+		NrCardList::iterator itt = std::find(to.begin(), to.end(), (*p)[k]);
+		if (itt == to.end())
+			to.push_back((*p)[k]);
+		else
+			itt->instanceNum += 1;
+		NrCardList::iterator itd = p->begin();
+		while (k--) ++itd;
+		p->erase(itd);
+		if (p == &corpo)
+			p = &runner;
+		else
+			p = &corpo;
+	}
+}
+
+bool Tournament::CreateSealed(const Glib::RefPtr<Gio::File>& aNrdb,
+							  const Glib::RefPtr<Gio::File>& aText,
+							  const Glib::RefPtr<Gio::File>& aPDF)
+{
+	NrCardList tmp;
+	for (int b = 0; b < sealedConfig.size(); ++b) 
+	{
+		NrCardList lrset = SubList(sealedConfig[b].set, NrCard::rare);
+		PickCards(tmp, lrset, sealedConfig[b].rares);
+		NrCardList luset = SubList(sealedConfig[b].set, NrCard::uncommon);
+		PickCards(tmp, luset, sealedConfig[b].uncommons);
+		NrCardList lcset = SubList(sealedConfig[b].set, NrCard::common);
+		PickCards(tmp, lcset, sealedConfig[b].commons);
+		NrCardList lvset = SubList(sealedConfig[b].set, NrCard::vitale);
+		PickCards(tmp, lvset, sealedConfig[b].vitales);
+	}
+	if (aPDF)
+		WritePDF(tmp, aPDF);
+	if (aText)
+		TextExport(tmp, aText);
+	if (aNrdb)
+		NrDb::SaveDeck(tmp, aNrdb->get_path().c_str());
 }

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Nr-deckbuilder 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-05-13 11:49+0200\n"
+"POT-Creation-Date: 2011-05-26 09:50+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Bastien Durel\n"
 "Language: \n"
@@ -16,78 +16,291 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../src/main.cc:118
+#: ../src/main.cc:143
+msgid "Cannot load Master DB"
+msgstr "Impossible de charger la base de référence"
+
+#: ../src/main.cc:235
+msgid ""
+"<b>You are using %5 version <i>%1.%2</i>. Last version is <i>%3.%4</i></b>"
+msgstr ""
+
+#: ../src/main.cc:239
+msgid "You may download the last version on <u><tt>%1</tt></u>"
+msgstr ""
+
+#: ../src/main.cc:241
+msgid "Never warn me again"
+msgstr "Ne plus m'avertir"
+
+#: ../src/main.cc:263
+msgid "invalid version: %1"
+msgstr "`%1` est un format de version invalide"
+
+#: ../src/main.cc:277
 msgid "File already exists. Overwrite ?"
 msgstr "Le fichier sélectionné existe déjà. L'écraser ?"
 
-#: ../src/main.cc:176 ../src/nr_deckbuilder.ui.h:4
+#: ../src/main.cc:289
+msgid "Your deck was modified, do you want to save it ?"
+msgstr "Votre deck a été modifié, voulez-vous sauvegarder vos modifications ?"
+
+#: ../src/main.cc:376 ../src/nr_deckbuilder.ui.h:8
 msgid "Name"
 msgstr "Nom"
 
-#: ../src/main.cc:179
+#: ../src/main.cc:383
 msgid "Count"
 msgstr "Nb"
 
-#: ../src/main.cc:180
+#: ../src/main.cc:388
 msgid "Print"
 msgstr "Imprimer"
 
-#: ../src/main.cc:182 ../src/nr_deckbuilder.ui.h:8
+#: ../src/main.cc:394 ../src/nr_deckbuilder.ui.h:26
 msgid "Type"
 msgstr "Type"
 
-#: ../src/main.cc:183
+#: ../src/main.cc:395
 msgid "Keyw"
 msgstr "Clés"
 
-#: ../src/main.cc:184
+#: ../src/main.cc:396
 msgid "Cost"
 msgstr "Coût"
 
-#: ../src/main.cc:185
+#: ../src/main.cc:397
 msgid "Pt"
 msgstr "Pts"
 
-#: ../src/main.cc:186
+#: ../src/main.cc:398 ../src/nr_deckbuilder.ui.h:25
 msgid "Text"
 msgstr "Texte"
 
-#: ../src/main.cc:303
+#: ../src/main.cc:516 ../src/main.cc:773 ../src/main.cc:808
+msgid "%1 not found in deck"
+msgstr "Impossible de trouver `%1` dans le deck"
+
+#: ../src/main.cc:525
+msgid "Nothing selected in %1"
+msgstr "Rien n'a été sélectionné dans %1"
+
+#: ../src/main.cc:537
 msgid "Cannot save deck"
 msgstr "Impossible d'enregistrer le deck"
 
-#: ../src/main.cc:341 ../src/main.cc:374 ../src/main.cc:402 ../src/main.cc:425
+#: ../src/main.cc:584 ../src/main.cc:618 ../src/main.cc:654 ../src/main.cc:701
 msgid "Please choose a file"
 msgstr "Choisissez un fichier"
 
+#: ../src/main.cc:685
+msgid "Number\tCard Name\tPrint\n"
+msgstr "Nombre\tCarte\tImpression\n"
+
+#: ../src/main.cc:873
+msgid "Count: %1 - Agenda points: %2"
+msgstr "Nombre de cartes : %1 - Points d'agenda : %2"
+
+#: ../src/main.cc:875
+#, fuzzy
+msgid "Count: %1"
+msgstr "Nb: %1"
+
+#: ../src/main.cc:924
+msgid "Card name contains"
+msgstr "Le nom de la carte contient"
+
+#: ../src/main.cc:927
+msgid "Card type is"
+msgstr "Le type de la carte est"
+
+#: ../src/main.cc:930
+msgid "Card contains keyword"
+msgstr "La carte contient le mot-clef"
+
+#: ../src/main.cc:933
+msgid "Card text contains"
+msgstr "Le texte de la carte contient"
+
+#: ../src/main.cc:936
+msgid "Card name, keywords, or text contains"
+msgstr "Le nom de la carte, son texte, ou ses mots-clef contiennent"
+
+#: ../src/main.cc:939
+msgid "Enter an SQL expression to select cards"
+msgstr "Entrez une expression SQL pour sélectionner des cartes"
+
+#: ../src/pdf.cc:201
+msgid "ERROR: cannot create pdf object"
+msgstr "Erreur: impossible de créer l'objet PDF"
+
+#: ../src/pdf.cc:316
+msgid "ERROR: error_no=%1, detail_no=%2"
+msgstr "ERREUR: numéro d'erreur %1, numéro de détail %2"
+
+#: ../src/pdf.cc:344
+msgid "%1 - Page %2"
+msgstr "%1 - Page %2"
+
+#: ../src/tournament.cc:53
+msgid "Set"
+msgstr "Édition"
+
+#: ../src/tournament.cc:59
+msgid "Rares"
+msgstr "Rares"
+
+#: ../src/tournament.cc:64
+msgid "Uncommons"
+msgstr "Non-communes"
+
+#: ../src/tournament.cc:69
+msgid "Commons"
+msgstr "Communes"
+
+#: ../src/tournament.cc:74
+msgid "Vitales"
+msgstr "Vitales"
+
 #: ../src/nr_deckbuilder.ui.h:1
+msgid "Add"
+msgstr "Ajouter"
+
+#: ../src/nr_deckbuilder.ui.h:2
+msgid "Advanced search: SQL expression"
+msgstr "Recherche avancée: expression SQL"
+
+#: ../src/nr_deckbuilder.ui.h:3 ../src/nr_sealed.ui.h:2
 msgid "Aid_e"
 msgstr "Aid_e"
 
-#: ../src/nr_deckbuilder.ui.h:2
+#: ../src/nr_deckbuilder.ui.h:4
+#, fuzzy
+msgid "Export as PDF"
+msgstr "Exporter en _PDF"
+
+#: ../src/nr_deckbuilder.ui.h:5
+#, fuzzy
+msgid "Export as Text"
+msgstr "Exporter sous forme _Texte"
+
+#: ../src/nr_deckbuilder.ui.h:6
 msgid "Export as _PDF"
 msgstr "Exporter en _PDF"
 
-#: ../src/nr_deckbuilder.ui.h:3
+#: ../src/nr_deckbuilder.ui.h:7
 msgid "Export as _Text"
 msgstr "Exporter sous forme _Texte"
 
-#: ../src/nr_deckbuilder.ui.h:5
+#: ../src/nr_deckbuilder.ui.h:9
 msgid "Netrunner Deck builder"
 msgstr "Netrunner Deck builder"
 
-#: ../src/nr_deckbuilder.ui.h:6
+#: ../src/nr_deckbuilder.ui.h:10
+msgid "New"
+msgstr "Nouveau"
+
+#: ../src/nr_deckbuilder.ui.h:11
+msgid "Open"
+msgstr "Ouvrir"
+
+#: ../src/nr_deckbuilder.ui.h:12
+msgid "PDF"
+msgstr "PDF"
+
+#: ../src/nr_deckbuilder.ui.h:13
 msgid "Player"
 msgstr "Joueur"
 
-#: ../src/nr_deckbuilder.ui.h:7
+#: ../src/nr_deckbuilder.ui.h:14
+msgid "Quit"
+msgstr "Quitter"
+
+#: ../src/nr_deckbuilder.ui.h:15
 msgid "Rarity"
 msgstr "Rareté"
 
-#: ../src/nr_deckbuilder.ui.h:9
+#: ../src/nr_deckbuilder.ui.h:16
+msgid "Remove"
+msgstr "Enlever"
+
+#: ../src/nr_deckbuilder.ui.h:17
+msgid "Save"
+msgstr "Enregistrer"
+
+#: ../src/nr_deckbuilder.ui.h:18
+msgid "Save as"
+msgstr "Enregistrer sous"
+
+#: ../src/nr_deckbuilder.ui.h:19
+msgid "Search by keyword"
+msgstr "Recherche par mot-clef"
+
+#: ../src/nr_deckbuilder.ui.h:20
+msgid "Search by name"
+msgstr "Recherche dans le nom"
+
+#: ../src/nr_deckbuilder.ui.h:21
+msgid "Search by type"
+msgstr "Recherche par type"
+
+#: ../src/nr_deckbuilder.ui.h:22
+msgid "Search in all fields"
+msgstr "Recherche dans tous les champs"
+
+#: ../src/nr_deckbuilder.ui.h:23
+msgid "Search in text"
+msgstr "Recherche dans le texte"
+
+#: ../src/nr_deckbuilder.ui.h:24
+msgid "Search: "
+msgstr "Rechercher : "
+
+#: ../src/nr_deckbuilder.ui.h:27
+msgid "You may type an SQL *where* expression to seek in database"
+msgstr "Vous pouvez entrer une expression SQL *WHERE* pour rechercher dans la base"
+
+#: ../src/nr_deckbuilder.ui.h:28
 msgid "_Exporter"
 msgstr "_Exporter"
 
-#: ../src/nr_deckbuilder.ui.h:10
+#: ../src/nr_deckbuilder.ui.h:29 ../src/nr_sealed.ui.h:9
 msgid "_Fichier"
 msgstr "_Fichier"
+
+#: ../src/nr_deckbuilder.ui.h:30 ../src/nr_sealed.ui.h:10
+msgid "toolbutton1"
+msgstr ""
+
+#: ../src/nr_sealed.ui.h:1
+msgid "&#xC9;_dition"
+msgstr "É_dition"
+
+#: ../src/nr_sealed.ui.h:3
+msgid "Decks"
+msgstr "Decks"
+
+#: ../src/nr_sealed.ui.h:4
+#, fuzzy
+msgid "Players"
+msgstr "Joueur"
+
+#: ../src/nr_sealed.ui.h:5
+msgid "Rounds"
+msgstr "Rondes"
+
+#: ../src/nr_sealed.ui.h:6
+msgid "TODO"
+msgstr "À Faire"
+
+#: ../src/nr_sealed.ui.h:7
+msgid "Tournament Manager"
+msgstr "Gestionnaire de tournoi"
+
+#: ../src/nr_sealed.ui.h:8
+msgid "_Affichage"
+msgstr "_Affichage"
+
+#: ../src/nr_sealed.ui.h:11
+msgid "toolbutton2"
+msgstr ""

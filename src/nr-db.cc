@@ -106,18 +106,68 @@ NrDb* NrDb::Master()
 	return masterDb;
 }
 
+bool NrDb::Refresh()
+{
+	if (!List())
+		return false;
+	fullList.clear();
+	NrCard* card;
+	while ((card = Next()) != 0)
+	{
+		fullList.push_back(*card);
+		delete card;
+	}
+	EndList();
+	return true;
+}
+
 bool NrDb::Import(const char* aFile)
 {
 	int err;
 	char* errmsg = 0;
-	int (*callback)(void*,int,char**,char**) = 0;
-	void* callback_param = 0;
-	err = sqlite3_exec(db, "ATTACH DATABASE aFile AS imp", callback, callback_param, &errmsg);
-	err = sqlite3_exec(db, "insert into card select * from imp.card", callback, callback_param, &errmsg);
-	err = sqlite3_exec(db, "insert into keyword select * from imp.keyword", callback, callback_param, &errmsg);
-	err = sqlite3_exec(db, "insert into illustration select * from imp.illustration", callback, callback_param, &errmsg);
-	err = sqlite3_exec(db, "DETACH DATABASE imp", callback, callback_param, &errmsg);
-	return false;
+	Glib::ustring msg;
+	Glib::ustring attach = Glib::ustring::compose("ATTACH DATABASE '%1' AS imp",
+												  aFile);
+	err = sqlite3_exec(db, attach.raw().c_str(), 0, 0, &errmsg);
+	if (err != SQLITE_OK)
+		throw SQLError("attach error", errmsg, true);
+	try 
+	{
+		err = sqlite3_exec(db, "BEGIN", 0, 0, &errmsg);
+		if (err != SQLITE_OK)
+			throw SQLError("begin error", errmsg, true);
+		err = sqlite3_exec(db, "insert into card select * from imp.card", 0, 0, &errmsg);
+		if (err != SQLITE_OK)
+			throw SQLError("insert into card error", errmsg, true);
+		err = sqlite3_exec(db, "insert into keyword select * from imp.keyword", 0, 0, &errmsg);
+		if (err != SQLITE_OK)
+			throw SQLError("insert into keyword error", errmsg, true);
+		err = sqlite3_exec(db, "insert into illustration select * from imp.illustration", 0, 0, &errmsg);
+		if (err != SQLITE_OK)
+			throw SQLError("insert into illustration error", errmsg, true);
+		err = sqlite3_exec(db, "COMMIT", 0, 0, &errmsg);
+		if (err != SQLITE_OK)
+			throw SQLError("commmit error", errmsg, true);
+	} catch (const SQLError& ex)
+	{
+		msg = ex.what();
+		err = sqlite3_exec(db, "ROLLBACK", 0, 0, &errmsg);
+		if (err != SQLITE_OK) 
+		{
+			msg = Glib::ustring::compose("rollback error [%1]",
+													   ex.what());
+			err = sqlite3_exec(db, "DETACH DATABASE imp", 0, 0, &errmsg);
+			if (err != SQLITE_OK)
+				msg = Glib::ustring::compose("detach error [%1]", msg);
+			throw SQLError(msg.raw().c_str(), errmsg, true);
+		}
+	}
+	err = sqlite3_exec(db, "DETACH DATABASE imp", 0, 0, &errmsg);
+	if (err != SQLITE_OK)
+		throw SQLError("attach error", errmsg, true);
+	if (msg.size() > 0)
+		throw SQLError(msg);
+	return true;
 }
 
 static const Glib::ustring SELECT("select card.name name, card.cost cost, group_concat(keyword.keyword, '-') keywords, points, text, flavortext, runner, lower(type) type, rarity ");
@@ -172,6 +222,30 @@ bool NrDb::List(const Glib::ustring& aFilter, bool adv)
 		listSql = SELECT + FROM + WHERE + " and name in (select distinct name " + FROM + WHERE + " and " + aFilter + ")" + GROUP;
 	else
 		listSql = "select * from (" + SELECT + FROM + WHERE + GROUP + ") where " + aFilter;
+	LOG(listSql);
+	int err = sqlite3_prepare_v2(db, listSql.c_str(), listSql.bytes() + 1, &listStmt, 0);
+	if (err != SQLITE_OK)
+	{
+		std::cerr << "Error in SQL(" << listSql << "): " << sqlite3_errmsg(db) << std::endl;
+		return false;
+	}
+	return false;
+}
+
+
+bool NrDb::ListExpr(const Glib::ustring& aExpr)
+{
+	if (!db) return false;
+	if (aExpr.size() == 0)
+		return List();
+
+	if (listStmt)
+	{ /* Clean previous */
+		EndList();
+	}
+
+	/* start query */
+	listSql = SELECT + FROM + WHERE + " and name in (" + aExpr + ")" + GROUP;
 	LOG(listSql);
 	int err = sqlite3_prepare_v2(db, listSql.c_str(), listSql.bytes() + 1, &listStmt, 0);
 	if (err != SQLITE_OK)

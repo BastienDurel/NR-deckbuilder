@@ -34,6 +34,7 @@ public:
 
 	bool List();
 	bool List(const Glib::ustring& aFilter, bool adv=false);
+	bool ListExpr(const Glib::ustring& aExpr);
 	void EndList();
 	int ListCount() const { return listCount; }
 	NrCard* Next();
@@ -56,6 +57,8 @@ public:
 	NrCardList& LoadDeck(const char* aFile, NrCardList& aList) throw (Glib::Exception);
 
 	static bool SaveDeck(const NrCardList& aList, const char* aFile);
+
+	bool Refresh();
 	
 protected:
 	sqlite3* db;
