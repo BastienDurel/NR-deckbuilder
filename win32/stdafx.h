@@ -21,14 +21,14 @@
 #define PACKAGE_DATA_DIR ".."
 #define UI_FILE PACKAGE_DATA_DIR "/src/nr_deckbuilder.ui"
 #define GETTEXT_PACKAGE (const char*)"nr_deckbuilder"
-#define PACKAGE_LOCALE_DIR PACKAGE_DATA_DIR "share/locale"
+#define PACKAGE_LOCALE_DIR PACKAGE_DATA_DIR "/share/locale"
 
 #define ENABLE_NLS
 #define HAVE_HPDF
 #define HAVE_HPDF_22
 #define PACKAGE_NAME (const char*)"nr_deckbuilder"
 #define PACKAGE_URL (const char*)"http://corrin.geekwu.org/~bastien/NR"
-#define PACKAGE_VERSION "0.3"
+#define PACKAGE_VERSION "0.4"
 
 //#define WIN32_COMPOSE_BUG
 
