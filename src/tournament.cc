@@ -29,13 +29,15 @@
 #include "uti.h"
 
 #if defined DEV_BUILD
-# if !defined UI_FILE
-#  define UI_FILE "src/nr_sealed.ui"
+# if !defined UI_FILE_T
+#  define UI_FILE_T "src/nr_sealed.ui"
 # endif
 # undef PACKAGE_LOCALE_DIR
 # define PACKAGE_LOCALE_DIR "Debug/po"
 #else
-# define UI_FILE PACKAGE_DATA_DIR"/nr_deckbuilder/ui/nr_sealed.ui"
+# if !defined UI_FILE_T
+#  define UI_FILE_T PACKAGE_DATA_DIR"/nr_deckbuilder/ui/nr_sealed.ui"
+# endif
 #endif
 
 const Tournament::BoosterConfig baseStarter = { "Netrunner Limited", 4, 16, 50, 30 };
@@ -45,7 +47,7 @@ const Tournament::BoosterConfig classicBooster = { "Netrunner ", 1, 0, 4, 0 };
 
 void Tournament::Run()
 {
-	builder = Gtk::Builder::create_from_file(UI_FILE);
+	builder = Gtk::Builder::create_from_file(UI_FILE_T);
 	builder->get_widget("tmanager", tmanager);
 
 	/* Init lists */
@@ -165,4 +167,5 @@ bool Tournament::CreateSealed(const Glib::RefPtr<Gio::File>& aNrdb,
 		TextExport(tmp, aText);
 	if (aNrdb)
 		NrDb::SaveDeck(tmp, aNrdb->get_path().c_str());
+	return true;
 }

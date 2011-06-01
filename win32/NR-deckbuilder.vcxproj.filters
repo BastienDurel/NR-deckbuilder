@@ -44,5 +44,8 @@
     <ClCompile Include="..\src\sqlite3.c">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\tournament.cc">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

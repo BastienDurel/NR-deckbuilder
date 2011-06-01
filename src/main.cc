@@ -258,8 +258,14 @@ NrDeckbuilder::Version NrDeckbuilder::ParseVersion(const char* v)
 {
 	Version ret;
 	char dummy;
-	std::istringstream is(v);
+	std::string s(v);
+#if defined WIN32
+	std::stringstream* is = new std::stringstream(s);
+	*is >> ret.first >> dummy >> ret.second;
+#else
+	std::stringstream is(s);
 	is >> ret.first >> dummy >> ret.second;
+#endif
 	if (dummy != '.')
 		throw Glib::OptionError(Glib::OptionError::BAD_VALUE, Glib::ustring::compose(_("invalid version: %1"), v));
 	LOG(ret.first << dummy << ret.second);
