@@ -42,6 +42,7 @@ public:
 	const char * LastError() { if (db) return sqlite3_errmsg(db); return "no DB"; }
 
 	bool LoadImage(class NrCard&) const;
+	bool LoadImage(class NrCard&);
 
 	NrCardList& GetFullList() { return fullList; }
 	NrCardList::iterator FullBegin() { return fullList.begin(); }
@@ -52,6 +53,7 @@ public:
 	NrCard& front() { return fullList.front(); }
 
 	NrCard& Seek(const Glib::ustring& aName);
+	const NrCard& Seek(const Glib::ustring& aName) const;
 
 	NrCardList LoadDeck(const char* aFile) throw (Glib::Exception);
 	NrCardList& LoadDeck(const char* aFile, NrCardList& aList) throw (Glib::Exception);
@@ -72,6 +74,7 @@ protected:
 	
 private:
 	NrDb(const char* aFile);
+	bool _LoadImage(class NrCard&) const;
 
 };
 

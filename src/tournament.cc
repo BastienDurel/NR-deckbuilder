@@ -24,6 +24,7 @@
 #endif
 
 #include <set>
+#include <algorithm>
 #include <glibmm/i18n.h>
 #include "tournament.h"
 #include "uti.h"
@@ -40,10 +41,14 @@
 # endif
 #endif
 
-const Tournament::BoosterConfig baseStarter = { "Netrunner Limited", 4, 16, 50, 30 };
-const Tournament::BoosterConfig baseBooster = { "Netrunner Limited", 2, 4, 9, 0 };
-const Tournament::BoosterConfig protetusBooster = { "Netrunner ", 2, 3, 7, 0 };
-const Tournament::BoosterConfig classicBooster = { "Netrunner ", 1, 0, 4, 0 };
+const Tournament::BoosterConfig Tournament::baseStarter =
+{ "Netrunner Limited", 4, 16, 50, 30 };
+const Tournament::BoosterConfig Tournament::baseBooster = 
+{ "Netrunner Limited", 2, 4, 9, 0 };
+const Tournament::BoosterConfig Tournament::protetusBooster = 
+{ "Netrunner Proteus", 2, 3, 7, 0 };
+const Tournament::BoosterConfig Tournament::classicBooster = 
+{ "Netrunner Classic", 1, 0, 4, 0 };
 
 void Tournament::Run()
 {
@@ -90,7 +95,29 @@ void Tournament::Run()
 	row[ParamCols.m_col_set] = "base";
 	row[ParamCols.m_col_rares] = 3;
 	
-	kit.run(*tmanager);
+	//kit.run(*tmanager);
+	tmanager->show();
+	
+
+#if defined DEV_BUILD
+	LOG("Config sealed");
+	sealedConfig.push_back(baseStarter);
+	sealedConfig.push_back(baseBooster);
+	sealedConfig.push_back(protetusBooster);
+	sealedConfig.push_back(classicBooster);
+	sealedConfig.push_back(classicBooster);
+	LOG("create files");
+	Glib::RefPtr<Gio::File> s1 = Gio::File::create_for_path("test_s.nrsd");
+	if (s1->query_exists()) s1->remove();
+	Glib::RefPtr<Gio::File> s2 = Gio::File::create_for_path("test_s.txt");
+	if (s2->query_exists()) s2->remove();
+	Glib::RefPtr<Gio::File> s3 = Gio::File::create_for_path("test_s.pdf");
+	if (s3->query_exists()) s3->remove();
+	LOG("running");
+	CreateSealed(s1, s2, s3);
+	LOG("done, deconfiguring");
+	sealedConfig.clear();
+#endif
 }
 
 NrCardList Tournament::SubList(const Glib::ustring& set, NrCard::Rarety rarety)
@@ -108,16 +135,29 @@ NrCardList Tournament::SubList(const Glib::ustring& set, NrCard::Rarety rarety)
 	db.ListExpr("select distinct card.name from illustration, card where illustration.card = card.name and illustration.version = '" + set + "' and rarity = '" + c + "'");
 	while (card = db.Next())
 	{
+		if (!card->GetImage())
+			db.LoadImage(*card);
 		lset.push_back(*card);
 	}
 	db.EndList();
 	return lset;
 }
 
+template<NrCard::Side s>
+class CopyIf
+{
+	NrCardList& to;
+public:
+	CopyIf(NrCardList& l) : to(l) {}
+	void operator()(const NrCard& c) { if (c.GetSide() == s) to.push_back(c); }
+};
+
 static void PickCards(NrCardList& to, NrCardList& from, guint nb)
 {
 	NrCardList runner, corpo;
 	NrCardList* p = 0;
+	std::for_each(from.begin(), from.end(), CopyIf<NrCard::runner>(runner));
+	std::for_each(from.begin(), from.end(), CopyIf<NrCard::corpo>(corpo));
 	if (nb % 2)
 	{
 		if (Tournament::Random(1))
@@ -129,15 +169,27 @@ static void PickCards(NrCardList& to, NrCardList& from, guint nb)
 		p = &corpo;
 	while (nb--)
 	{
-		int k = Tournament::Random(p->size() - 1);
+		if (p->size() == 0)
+			throw Glib::OptionError(Glib::OptionError::BAD_VALUE, 
+									_("No cards for this rarity/side/set"));
+		int k = 0;
+		if (p->size() > 1)
+			k = Tournament::Random(p->size() - 1);
 		NrCardList::iterator itt = std::find(to.begin(), to.end(), (*p)[k]);
 		if (itt == to.end())
+		{
 			to.push_back((*p)[k]);
+			to.back().instanceNum = 1;
+			to.back().print = true;
+		}
 		else
 			itt->instanceNum += 1;
-		NrCardList::iterator itd = p->begin();
-		while (k--) ++itd;
-		p->erase(itd);
+		if (p->size() > 1)
+		{
+			NrCardList::iterator itd = p->begin();
+			while (k--) ++itd;
+			p->erase(itd);
+		}
 		if (p == &corpo)
 			p = &runner;
 		else
@@ -145,7 +197,7 @@ static void PickCards(NrCardList& to, NrCardList& from, guint nb)
 	}
 }
 
-bool Tournament::CreateSealed(const Glib::RefPtr<Gio::File>& aNrdb,
+bool Tournament::CreateSealed(const Glib::RefPtr<Gio::File>& aNrsd,
 							  const Glib::RefPtr<Gio::File>& aText,
 							  const Glib::RefPtr<Gio::File>& aPDF)
 {
@@ -165,7 +217,7 @@ bool Tournament::CreateSealed(const Glib::RefPtr<Gio::File>& aNrdb,
 		WritePDF(tmp, aPDF);
 	if (aText)
 		TextExport(tmp, aText);
-	if (aNrdb)
-		NrDb::SaveDeck(tmp, aNrdb->get_path().c_str());
+	if (aNrsd)
+		NrDb::SaveDeck(tmp, aNrsd->get_path().c_str());
 	return true;
 }

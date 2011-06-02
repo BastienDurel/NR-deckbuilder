@@ -24,6 +24,7 @@
 #define LOG(x)
 #define LOGN(x)
 #else
+#include <iostream>
 #define LOG(x) std::cerr << x << std::endl
 #define LOGN(x) std::cerr << x
 #endif

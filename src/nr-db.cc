@@ -343,7 +343,7 @@ NrCard* NrDb::Next()
 
 static void no_op(void*) {}
 
-bool NrDb::LoadImage(class NrCard& aCard) const
+bool NrDb::_LoadImage(class NrCard& aCard) const
 {
 	Glib::ustring count = "select data from illustration where card = ?";
 	sqlite3_stmt* loadStmt = 0;
@@ -393,6 +393,41 @@ bool NrDb::LoadImage(class NrCard& aCard) const
 	}
 	sqlite3_finalize(loadStmt);
 	return ok;
+}
+
+bool NrDb::LoadImage(class NrCard& aCard) const
+{
+	try
+	{
+		const NrCard& ref = Seek(aCard.GetName());
+		if (ref.image)
+		{
+			aCard.image = ref.image;
+			return true;
+		}
+	} catch (...) {}
+	return _LoadImage(aCard);
+}
+
+bool NrDb::LoadImage(class NrCard& aCard)
+{
+	try
+	{
+		NrCard& ref = Seek(aCard.GetName());
+		if (ref.image)
+		{
+			aCard.image = ref.image;
+			return true;
+		}
+		else
+		{
+			bool ret = _LoadImage(aCard);
+			if (ret) 
+				ref.image = aCard.image;
+			return ret;
+		}
+	} catch (...) {}
+	return _LoadImage(aCard);
 }
 
 NrCardList NrDb::GetList(const Glib::ustring& aFilter)
@@ -457,6 +492,15 @@ NrCardList NrDb::LoadDeck(const char* aFile) throw (Glib::Exception)
 NrCard& NrDb::Seek(const Glib::ustring& aName)
 {
 	NrCardList::iterator lit = std::find(fullList.begin(), fullList.end(), aName);
+	if (lit == fullList.end())
+		throw Glib::OptionError(Glib::OptionError::BAD_VALUE, "Card " + aName + " not found");
+	else
+		return *lit;
+}
+
+const NrCard& NrDb::Seek(const Glib::ustring& aName) const
+{
+	NrCardList::const_iterator lit = std::find(fullList.begin(), fullList.end(), aName);
 	if (lit == fullList.end())
 		throw Glib::OptionError(Glib::OptionError::BAD_VALUE, "Card " + aName + " not found");
 	else
