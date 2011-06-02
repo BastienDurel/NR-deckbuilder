@@ -135,6 +135,7 @@ NrCardList Tournament::SubList(const Glib::ustring& set, NrCard::Rarety rarety)
 	db.ListExpr("select distinct card.name from illustration, card where illustration.card = card.name and illustration.version = '" + set + "' and rarity = '" + c + "'");
 	while (card = db.Next())
 	{
+		card->set = set;
 		if (!card->GetImage())
 			db.LoadImage(*card);
 		lset.push_back(*card);
@@ -197,6 +198,24 @@ static void PickCards(NrCardList& to, NrCardList& from, guint nb)
 	}
 }
 
+bool SortSealedDeck(const NrCard& l, const NrCard& r) 
+{
+	if (l.set == r.set)
+	{
+		if (l.GetSide() == r.GetSide()) 
+		{
+			if (l.GetRarety() == r.GetRarety())
+				return l.GetName() < r.GetName();
+			else
+				return l.GetRarety() < r.GetRarety();
+		}
+		else 
+			return l.GetSide() < r.GetSide();
+	}
+	else
+		return l.set < r.set;
+}
+
 bool Tournament::CreateSealed(const Glib::RefPtr<Gio::File>& aNrsd,
 							  const Glib::RefPtr<Gio::File>& aText,
 							  const Glib::RefPtr<Gio::File>& aPDF)
@@ -213,6 +232,7 @@ bool Tournament::CreateSealed(const Glib::RefPtr<Gio::File>& aNrsd,
 		NrCardList lvset = SubList(sealedConfig[b].set, NrCard::vitale);
 		PickCards(tmp, lvset, sealedConfig[b].vitales);
 	}
+	std::sort(tmp.begin(), tmp.end(), SortSealedDeck);
 	if (aPDF)
 		WritePDF(tmp, aPDF);
 	if (aText)

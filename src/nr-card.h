@@ -63,6 +63,7 @@ public:
 
 	gint instanceNum;// used for decks, not for reference
 	bool print;// used for decks, not for reference
+	Glib::ustring set;
 	
 protected:
 	Glib::ustring name;
