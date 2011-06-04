@@ -1,3 +1,4 @@
+/* -*- Mode: C++; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*- */
 /*
  * uti.h
  *
@@ -28,6 +29,10 @@
 #define LOG(x) std::cerr << x << std::endl
 #define LOGN(x) std::cerr << x
 #endif
+
+#include <glibmm.h>
+#include <gtkmm.h>
+#include "nr-card.h"
 
 extern bool WritePDF(NrCardList& list, Glib::RefPtr<Gio::File> file);
 extern void TextExport(const NrCardList& list, const Glib::RefPtr<Gio::File>& file);

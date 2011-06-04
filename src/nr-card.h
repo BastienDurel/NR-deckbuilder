@@ -91,4 +91,26 @@ private:
 
 typedef std::vector<NrCard> NrCardList;
 
+inline bool operator<(NrCard::Rarety l, NrCard::Rarety r)
+{
+	register int ll = 0;
+	register int lr = 0;
+	switch (l)
+	{
+		case NrCard::rare: ll = 0; break;
+		case NrCard::uncommon: ll = 1; break;
+		case NrCard::common: ll = 2; break;
+		case NrCard::vitale: ll = 3; break;
+	}
+	switch (r)
+	{
+		case NrCard::rare: lr = 0; break;
+		case NrCard::uncommon: lr = 1; break;
+		case NrCard::common: lr = 2; break;
+		case NrCard::vitale: lr = 3; break;
+	}
+	return ll < lr;
+}
+
+
 #endif // _NR_CARD_H_

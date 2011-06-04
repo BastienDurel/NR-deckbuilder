@@ -198,6 +198,29 @@ static void PickCards(NrCardList& to, NrCardList& from, guint nb)
 	}
 }
 
+bool SortSet(const Glib::ustring& l, const Glib::ustring& r)
+{
+	static const Glib::ustring official[] = {
+		"Netrunner Limited",
+		"Netrunner Proteus",
+		"Netrunner Classic"
+	};
+	const Glib::ustring* begin = official;
+	const Glib::ustring* end = official + 3;
+	const Glib::ustring* lit, * rit;
+	if ((lit = std::find(begin, end, l)) != end) 
+	{
+		if ((rit = std::find(begin, end, r)) == end)
+			return true; // l is official, r is user
+		else 
+			return lit < rit; // both are official
+	}
+	if ((rit = std::find(begin, end, r)) == end)
+		return l < r; // alpha sort of user/user
+	else
+		return false; // l is user, r is official
+}
+
 bool SortSealedDeck(const NrCard& l, const NrCard& r) 
 {
 	if (l.set == r.set)
@@ -213,7 +236,7 @@ bool SortSealedDeck(const NrCard& l, const NrCard& r)
 			return l.GetSide() < r.GetSide();
 	}
 	else
-		return l.set < r.set;
+		return SortSet(l.set, r.set);
 }
 
 bool Tournament::CreateSealed(const Glib::RefPtr<Gio::File>& aNrsd,

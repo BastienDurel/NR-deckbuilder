@@ -27,6 +27,7 @@
 #include "nr-card.h"
 #include <glib.h>
 #include <giomm/memoryinputstream.h>
+#include "uti.h"
 
 #include <iostream>
 
@@ -52,6 +53,7 @@ NrCard::NrCard(const NrCard& a) : base64Buffer(0)
 
 	instanceNum = a.instanceNum;
 	print = a.print;
+	set = a.set;
 }
 
 NrCard::~NrCard()
