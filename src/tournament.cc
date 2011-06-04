@@ -120,9 +120,16 @@ void Tournament::Run()
 #endif
 }
 
+std::map<std::pair<Glib::ustring, NrCard::Rarety>, NrCardList> gSetCache;
 NrCardList Tournament::SubList(const Glib::ustring& set, NrCard::Rarety rarety)
 {
-	NrCardList lset;
+	std::pair<Glib::ustring, NrCard::Rarety> id(set, rarety);
+	NrCardList& lset = gSetCache[id];
+	if (lset.size() > 0)
+	{
+		LOG("cache hit");
+		return lset;
+	}
 	NrCard* card;
 	char c = 'C';
 	switch (rarety)
@@ -247,14 +254,26 @@ bool Tournament::CreateSealed(const Glib::RefPtr<Gio::File>& aNrsd,
 	NrCardList tmp;
 	for (int b = 0; b < sealedConfig.size(); ++b) 
 	{
-		NrCardList lrset = SubList(sealedConfig[b].set, NrCard::rare);
-		PickCards(tmp, lrset, sealedConfig[b].rares);
-		NrCardList luset = SubList(sealedConfig[b].set, NrCard::uncommon);
-		PickCards(tmp, luset, sealedConfig[b].uncommons);
-		NrCardList lcset = SubList(sealedConfig[b].set, NrCard::common);
-		PickCards(tmp, lcset, sealedConfig[b].commons);
-		NrCardList lvset = SubList(sealedConfig[b].set, NrCard::vitale);
-		PickCards(tmp, lvset, sealedConfig[b].vitales);
+		if (sealedConfig[b].rares)
+		{
+			NrCardList lrset = SubList(sealedConfig[b].set, NrCard::rare);
+			PickCards(tmp, lrset, sealedConfig[b].rares);
+		}
+		if (sealedConfig[b].uncommons)
+		{
+			NrCardList luset = SubList(sealedConfig[b].set, NrCard::uncommon);
+			PickCards(tmp, luset, sealedConfig[b].uncommons);
+		}
+		if (sealedConfig[b].commons)
+		{
+			NrCardList lcset = SubList(sealedConfig[b].set, NrCard::common);
+			PickCards(tmp, lcset, sealedConfig[b].commons);
+		}
+		if (sealedConfig[b].vitales)
+		{
+			NrCardList lvset = SubList(sealedConfig[b].set, NrCard::vitale);
+			PickCards(tmp, lvset, sealedConfig[b].vitales);
+		}
 	}
 	std::sort(tmp.begin(), tmp.end(), SortSealedDeck);
 	if (aPDF)
