@@ -114,7 +114,7 @@ void Tournament::Run()
 	Glib::RefPtr<Gio::File> s3 = Gio::File::create_for_path("test_s.pdf");
 	if (s3->query_exists()) s3->remove();
 	LOG("running");
-	CreateSealed(s1, s2, s3);
+	CreateSealed(s1, s2, s3, "test");
 	LOG("done, deconfiguring");
 	sealedConfig.clear();
 #endif
@@ -241,7 +241,8 @@ bool SortSealedDeck(const NrCard& l, const NrCard& r)
 
 bool Tournament::CreateSealed(const Glib::RefPtr<Gio::File>& aNrsd,
 							  const Glib::RefPtr<Gio::File>& aText,
-							  const Glib::RefPtr<Gio::File>& aPDF)
+							  const Glib::RefPtr<Gio::File>& aPDF,
+							  const Glib::ustring& aName)
 {
 	NrCardList tmp;
 	for (int b = 0; b < sealedConfig.size(); ++b) 
@@ -257,7 +258,7 @@ bool Tournament::CreateSealed(const Glib::RefPtr<Gio::File>& aNrsd,
 	}
 	std::sort(tmp.begin(), tmp.end(), SortSealedDeck);
 	if (aPDF)
-		WritePDF(tmp, aPDF);
+		WritePDF(tmp, aPDF, aName);
 	if (aText)
 		TextExport(tmp, aText);
 	if (aNrsd)

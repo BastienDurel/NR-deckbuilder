@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-
 // pdf.cc
 //
 // Copyright (C) 2011 - Bastien Durel
@@ -360,7 +361,8 @@ void ComposePDF(NrCardList& list, HPDF& pdf, const Glib::ustring& name)
 }
 #endif
 
-bool WritePDF(NrCardList& list, Glib::RefPtr<Gio::File> file)
+bool WritePDF(NrCardList& list, Glib::RefPtr<Gio::File> file, 
+              const Glib::ustring& name)
 {
     NrCardList printed;
     for (NrCardList::iterator it = list.begin(); it != list.end(); ++it)
@@ -369,14 +371,19 @@ bool WritePDF(NrCardList& list, Glib::RefPtr<Gio::File> file)
     LOG("to print: " << printed.size());
 #if defined HAVE_HPDF
     HPDF pdf;
-    ComposePDF(printed, pdf, file->get_basename());
+    ComposePDF(printed, pdf, name);
     pdf.Save(file);
 #else
     Glib::RefPtr<PrintProxiesOperation> op = PrintProxiesOperation::create();
-    op->set_name(file->get_basename());
+    op->set_name(name);
     ComposePDF(printed, op);
     op->set_export_filename(file->get_path());
     Gtk::PrintOperationResult res = op->run(Gtk::PRINT_OPERATION_ACTION_EXPORT);
 #endif
 	  return true;
+}
+
+bool WritePDF(NrCardList& list, Glib::RefPtr<Gio::File> file)
+{
+	return WritePDF(list, file, file->get_basename());
 }

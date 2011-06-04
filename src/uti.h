@@ -35,6 +35,8 @@
 #include "nr-card.h"
 
 extern bool WritePDF(NrCardList& list, Glib::RefPtr<Gio::File> file);
+bool WritePDF(NrCardList& list, Glib::RefPtr<Gio::File> file, 
+              const Glib::ustring& name);
 extern void TextExport(const NrCardList& list, const Glib::RefPtr<Gio::File>& file);
 
 #endif

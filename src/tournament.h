@@ -90,7 +90,8 @@ public:
 
 	bool CreateSealed(const Glib::RefPtr<Gio::File>& aNrdb,
 					  const Glib::RefPtr<Gio::File>& aText,
-					  const Glib::RefPtr<Gio::File>& aPDF);
+					  const Glib::RefPtr<Gio::File>& aPDF,
+					  const Glib::ustring& aName);
 
 protected:
 	Gtk::Main& kit;
