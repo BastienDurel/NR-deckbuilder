@@ -141,6 +141,7 @@ class NrDeckbuilder
 		void onQuitClick();
 		void onTextExportClick();
 		void onPDFExportClick();
+	    void onMasterFromSealedClick();
 
 		void onAddClick();
 		void onDelClick();

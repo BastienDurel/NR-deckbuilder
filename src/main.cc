@@ -375,6 +375,10 @@ void NrDeckbuilder::InitActions()
 	builder->get_widget("menuitem-tournament", m);
 	if (m) m->signal_activate().connect
 		(sigc::mem_fun(*this, &NrDeckbuilder::onTounament));
+	builder->get_widget("menuitem-master-sealed", m);
+	if (m) m->signal_activate().connect
+		(sigc::mem_fun(*this, &NrDeckbuilder::onMasterFromSealedClick));
+
 }
 
 void NrDeckbuilder::InitList(bool aDeck)
@@ -1037,6 +1041,38 @@ void NrDeckbuilder::onTounament()
 	if (!UI.tournament)
 		UI.tournament = new Tournament(kit, *db);
 	UI.tournament->Run();
+}
+
+
+void NrDeckbuilder::onMasterFromSealedClick()
+{
+	LOG("onMasterFromSealedClick");
+	Gtk::FileChooserDialog dialog(_("Please choose a file"),
+	                              Gtk::FILE_CHOOSER_ACTION_OPEN);
+	dialog.set_transient_for(*UI.main_win);
+	dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+	dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
+
+	Gtk::FileFilter filter_txt;
+	filter_txt.set_name("Netrunner Sealed Files");
+	filter_txt.add_pattern("*.nrsd");
+	dialog.add_filter(filter_txt);
+
+	int result = dialog.run();
+	if (result != Gtk::RESPONSE_OK)
+		return;
+	Glib::RefPtr<Gio::File> file = dialog.get_file();
+	try
+	{
+		if (!file->query_exists())
+			throw Glib::FileError(Glib::FileError::FAILED, _("File not found"));
+		// TODO
+
+	}
+	catch (const Glib::Exception& ex) 
+	{
+		ErrMsg(ex);
+	}
 }
 
 #if defined WIN32 && defined NDEBUG

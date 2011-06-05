@@ -179,6 +179,14 @@
                       <object class="GtkMenu" id="menu4">
                         <property name="visible">True</property>
                         <child>
+                          <object class="GtkImageMenuItem" id="menuitem-master-sealed">
+                            <property name="label" translatable="yes">Load Master from _Sealed deck</property>
+                            <property name="visible">True</property>
+                            <property name="use_underline">True</property>
+                            <property name="always_show_image">True</property>
+                          </object>
+                        </child>
+                        <child>
                           <object class="GtkImageMenuItem" id="menuitem-import">
                             <property name="label" translatable="yes">Import into Master Database</property>
                             <property name="visible">True</property>
