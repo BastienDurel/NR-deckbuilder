@@ -100,23 +100,25 @@ void Tournament::Run()
 	
 
 #if defined DEV_BUILD
-	LOG("Config sealed");
-	sealedConfig.push_back(baseStarter);
-	sealedConfig.push_back(baseBooster);
-	sealedConfig.push_back(protetusBooster);
-	sealedConfig.push_back(classicBooster);
-	sealedConfig.push_back(classicBooster);
-	LOG("create files");
-	Glib::RefPtr<Gio::File> s1 = Gio::File::create_for_path("test_s.nrsd");
-	if (s1->query_exists()) s1->remove();
-	Glib::RefPtr<Gio::File> s2 = Gio::File::create_for_path("test_s.txt");
-	if (s2->query_exists()) s2->remove();
-	Glib::RefPtr<Gio::File> s3 = Gio::File::create_for_path("test_s.pdf");
-	if (s3->query_exists()) s3->remove();
-	LOG("running");
-	CreateSealed(s1, s2, s3, "test");
-	LOG("done, deconfiguring");
-	sealedConfig.clear();
+	try {
+		LOG("Config sealed");
+		sealedConfig.push_back(baseStarter);
+		sealedConfig.push_back(baseBooster);
+		sealedConfig.push_back(protetusBooster);
+		sealedConfig.push_back(classicBooster);
+		sealedConfig.push_back(classicBooster);
+		LOG("create files");
+		Glib::RefPtr<Gio::File> s1 = Gio::File::create_for_path("test_s.nrsd");
+		if (s1->query_exists()) s1->remove();
+		Glib::RefPtr<Gio::File> s2 = Gio::File::create_for_path("test_s.txt");
+		if (s2->query_exists()) s2->remove();
+		Glib::RefPtr<Gio::File> s3 = Gio::File::create_for_path("test_s.pdf");
+		if (s3->query_exists()) s3->remove();
+		LOG("running");
+		CreateSealed(s1, s2, s3, "test");
+		LOG("done, deconfiguring");
+		sealedConfig.clear();
+	} catch (...) {}
 #endif
 }
 

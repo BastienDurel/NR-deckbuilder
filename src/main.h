@@ -34,6 +34,7 @@ public:
 		add(m_col_points);
 		add(m_col_keywords);
 		add(m_col_text);
+		add(m_col_count);
 	}
 
 	Gtk::TreeModelColumn<Glib::ustring> m_col_name;
@@ -42,6 +43,7 @@ public:
 	Gtk::TreeModelColumn<Glib::ustring> m_col_points;
 	Gtk::TreeModelColumn<Glib::ustring> m_col_keywords;
 	Gtk::TreeModelColumn<Glib::ustring> m_col_text;
+	Gtk::TreeModelColumn<guint> m_col_count;
 };
 
 class DeckListColumns : public CardListColumns
@@ -49,11 +51,9 @@ class DeckListColumns : public CardListColumns
 public:
   DeckListColumns() : CardListColumns()
   {
-		add(m_col_count);
 		add(m_col_print);
   }
 
-	Gtk::TreeModelColumn<guint> m_col_count;
 	Gtk::TreeModelColumn<bool> m_col_print;
 };
 
@@ -91,6 +91,10 @@ class NrDeckbuilder
 			Gtk::TreeView* masterList;
 			Gtk::TreeView* deckList;
 
+			Gtk::TreeViewColumn* masterNumCol;
+
+			Gtk::CheckMenuItem* sealedModeItem;
+
 			Tournament* tournament;
 		} UI;
 
@@ -105,7 +109,9 @@ class NrDeckbuilder
 		NrCardList currentDeck;
 		Glib::RefPtr<Gio::File> currentDeckFile;
 
+		NrCardList sealedDeck;
 		bool mIsDirty;
+		bool mSealedMode;
 		searchType mCurrentSearch;
 	
 	public:
@@ -128,7 +134,8 @@ class NrDeckbuilder
 		NrCard& GetSelectedCard(Gtk::TreeView* aTreeView, bool aInDeck=false);
 
 		void LoadMaster();
-		void LoadList(NrCardList::const_iterator lbegin, NrCardList::const_iterator lend, bool aDeck=false);
+		void LoadList(NrCardList::const_iterator lbegin,
+					  NrCardList::const_iterator lend, bool aDeck=false);
 
 		void changeNum(Gtk::TreeModel::iterator& iter, gint num);
 
@@ -151,10 +158,12 @@ class NrDeckbuilder
 
 		void onNumClick(const Glib::ustring &, const Glib::ustring&);
 		void onPrintClick(const Glib::ustring &);
-		void onSearchIconPressed(Gtk::EntryIconPosition icon_pos, const GdkEventButton* event);
+		void onSearchIconPressed(Gtk::EntryIconPosition icon_pos,
+								 const GdkEventButton* event);
 		void onSearchActivated();
 
-		void onActivate(const Gtk::TreePath& p, Gtk::TreeViewColumn* const& c, bool aDeck, Gtk::TreeView* aTreeView);
+		void onActivate(const Gtk::TreePath& p, Gtk::TreeViewColumn* const& c,
+						bool aDeck, Gtk::TreeView* aTreeView);
 
 		static void ErrMsg(const Glib::ustring& msg);
 		static void ErrMsg(const Glib::Exception& msg) { ErrMsg(msg.what()); }

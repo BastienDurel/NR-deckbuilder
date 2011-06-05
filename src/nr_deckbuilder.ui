@@ -179,7 +179,7 @@
                       <object class="GtkMenu" id="menu4">
                         <property name="visible">True</property>
                         <child>
-                          <object class="GtkImageMenuItem" id="menuitem-master-sealed">
+                          <object class="GtkCheckMenuItem" id="menuitem-master-sealed">
                             <property name="label" translatable="yes">Load Master from _Sealed deck</property>
                             <property name="visible">True</property>
                             <property name="use_underline">True</property>

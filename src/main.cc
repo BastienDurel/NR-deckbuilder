@@ -113,6 +113,8 @@ main (int argc, char *argv[])
 
 NrDeckbuilder::NrDeckbuilder(Gtk::Main& a) : kit(a), mIsDirty(false)
 {
+	mSealedMode = false;
+
 	//Load the Glade file and instantiate its widgets:	
 	builder = Gtk::Builder::create_from_file(UI_FILE);
 	UI.main_win = 0;
@@ -141,6 +143,7 @@ NrDeckbuilder::NrDeckbuilder(Gtk::Main& a) : kit(a), mIsDirty(false)
 	UI.toolbuttondel->signal_clicked().connect(sigc::mem_fun(*this, &NrDeckbuilder::onDelClick));
 	mCurrentSearch = all;
 	UI.tournament = 0;
+	UI.masterNumCol = 0;
 
 	db = NrDb::Master();
 	if (!db)
@@ -375,9 +378,10 @@ void NrDeckbuilder::InitActions()
 	builder->get_widget("menuitem-tournament", m);
 	if (m) m->signal_activate().connect
 		(sigc::mem_fun(*this, &NrDeckbuilder::onTounament));
-	builder->get_widget("menuitem-master-sealed", m);
-	if (m) m->signal_activate().connect
-		(sigc::mem_fun(*this, &NrDeckbuilder::onMasterFromSealedClick));
+	builder->get_widget("menuitem-master-sealed", UI.sealedModeItem);
+	if (UI.sealedModeItem)
+		UI.sealedModeItem->signal_toggled().connect
+		    (sigc::mem_fun(*this, &NrDeckbuilder::onMasterFromSealedClick));
 
 }
 
@@ -413,12 +417,14 @@ void NrDeckbuilder::InitList(bool aDeck)
   		list->append_column(_("Cost"), MasterColumns.m_col_cost);
   		list->append_column(_("Pt"), MasterColumns.m_col_points);
   		list->append_column(_("Text"), MasterColumns.m_col_text);
-		Glib::RefPtr<Gtk::TreeSelection> refTreeSelection = list->get_selection();
+		Glib::RefPtr<Gtk::TreeSelection> refTreeSelection =
+			list->get_selection();
 		refTreeSelection->signal_changed().connect(
 			sigc::bind(sigc::mem_fun(*this, &NrDeckbuilder::onSelect), list));
 
 		list->signal_row_activated().connect(
-		     sigc::bind(sigc::mem_fun(*this, &NrDeckbuilder::onActivate), aDeck, list),
+		     sigc::bind(sigc::mem_fun(*this, &NrDeckbuilder::onActivate), 
+						aDeck, list),
 		     false);
 	}
 }
@@ -436,7 +442,10 @@ void NrDeckbuilder::LoadImage(NrCard& card)
 
 void NrDeckbuilder::LoadMaster()
 {
-	LoadList(db->FullBegin(), db->FullEnd());
+	if (!mSealedMode)
+		LoadList(db->FullBegin(), db->FullEnd());
+	else
+		LoadList(sealedDeck.begin(), sealedDeck.end());
 	Gtk::TreeModel::iterator iter = masterModel->children().begin();
 	if (iter && UI.masterList)
 		UI.masterList->get_selection()->select(iter);
@@ -472,7 +481,22 @@ void NrDeckbuilder::LoadList(NrCardList::const_iterator lbegin, NrCardList::cons
 	if (aDeck)
 	    list = UI.deckList;
     else
+	{
 	    list = UI.masterList;
+		if (mSealedMode)
+		{
+			if (!UI.masterNumCol)
+			{
+				list->insert_column(_("Count"), MasterColumns.m_col_count, 1);
+				UI.masterNumCol = list->get_column(1);
+			}
+		}
+		else if (UI.masterNumCol)
+		{
+			list->remove_column(*UI.masterNumCol);
+			UI.masterNumCol = 0;
+		}
+	}
     if (list)
 	{
 		Glib::RefPtr<Gtk::ListStore> refListStore;
@@ -499,6 +523,13 @@ void NrDeckbuilder::LoadList(NrCardList::const_iterator lbegin, NrCardList::cons
 			if (aDeck) {
 				row[DeckColumns.m_col_count] = citer->instanceNum;
 				row[DeckColumns.m_col_print] = citer->print;
+			}
+			else 
+			{
+				if (mSealedMode)
+					row[DeckColumns.m_col_count] = citer->instanceNum;
+				else
+					row[DeckColumns.m_col_count] = 0;
 			}
   		}
   		list->set_model(refListStore);
@@ -1047,6 +1078,12 @@ void NrDeckbuilder::onTounament()
 void NrDeckbuilder::onMasterFromSealedClick()
 {
 	LOG("onMasterFromSealedClick");
+	mSealedMode = UI.sealedModeItem->property_active();
+	if (mSealedMode ==  false)
+	{
+		LoadMaster();
+		return;
+	}
 	Gtk::FileChooserDialog dialog(_("Please choose a file"),
 	                              Gtk::FILE_CHOOSER_ACTION_OPEN);
 	dialog.set_transient_for(*UI.main_win);
@@ -1060,17 +1097,25 @@ void NrDeckbuilder::onMasterFromSealedClick()
 
 	int result = dialog.run();
 	if (result != Gtk::RESPONSE_OK)
+	{
+		UI.sealedModeItem->property_active() = false;
+		mSealedMode = false;
 		return;
+	}
 	Glib::RefPtr<Gio::File> file = dialog.get_file();
 	try
 	{
 		if (!file->query_exists())
 			throw Glib::FileError(Glib::FileError::FAILED, _("File not found"));
-		// TODO
+		sealedDeck.clear();
+		db->LoadDeck(file->get_path().c_str(), sealedDeck);
+		LoadMaster();
 
 	}
 	catch (const Glib::Exception& ex) 
 	{
+		UI.sealedModeItem->property_active() = false;
+		mSealedMode = false;
 		ErrMsg(ex);
 	}
 }
